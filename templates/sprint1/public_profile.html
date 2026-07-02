@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+    <!-- Profile Card -->
+    <div class="col-lg-4">
+        <div class="card text-center p-4">
+            <div class="mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: var(--gradient-cool); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 700;">
+                {{ profile_user.username[0]|upper }}
+            </div>
+            <h4 class="fw-bold mb-1">{{ profile_user.username }}</h4>
+            <p class="text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>{{ profile_user.city or 'Unknown' }}</p>
+            <span class="badge {% if profile_user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %} mb-2">{{ profile_user.role|upper }}</span>
+            <p class="small text-muted">Member since {{ profile_user.created_at }}</p>
+
+            {% if config.SPRINT2 %}
+            <!-- Rating Display -->
+            <div class="bg-light rounded-3 p-3 mb-3">
+                <div class="star-rating mb-1">
+                    {% for i in range(1, 6) %}
+                    <i class="bi {% if i <= avg_rating|default(0) %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+                    {% endfor %}
+                </div>
+                <small class="text-muted">{{ avg_rating|default(0) }}/5 ({{ rating_count|default(0) }} reviews)</small>
+            </div>
+
+            <!-- Rate this user -->
+            {% if session.get('user_id') and session.user_id != profile_user.id %}
+            <form action="{{ url_for('sprint2_ratings.rate_user', user_id=profile_user.id) }}" method="POST" class="text-start bg-light rounded-3 p-3">
+                <h6 class="fw-bold mb-2"><i class="bi bi-star me-1"></i>Rate this user</h6>
+
+                <div class="star-rating-input mb-2">
+                    {% for i in range(5, 0, -1) %}
+                    <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if my_rating and my_rating.rating == i %}checked{% endif %} required>
+                    <label for="star{{ i }}"><i class="bi bi-star-fill"></i></label>
+                    {% endfor %}
+                </div>
+
+                <textarea class="form-control form-control-sm mb-2" name="review" rows="2" placeholder="Write a review (optional)">{{ my_rating.review if my_rating else '' }}</textarea>
+
+                <button type="submit" class="btn btn-warning btn-sm w-100">
+                    <i class="bi bi-star me-1"></i>{{ 'Update Rating' if my_rating else 'Submit Rating' }}
+                </button>
+            </form>
+            {% endif %}
+
+            <!-- Reviews -->
+            {% if ratings %}
+            <div class="mt-3 text-start">
+                <h6 class="fw-bold mb-2">Reviews</h6>
+
+                {% for r in ratings %}
+                <div class="bg-light rounded p-2 mb-2 small">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ r.rater_name }}</strong>
+                        <span class="text-warning">
+                            {% for i in range(r.rating) %}
+                            <i class="bi bi-star-fill"></i>
+                            {% endfor %}
+                        </span>
+                    </div>
+
+                    {% if r.review %}
+                    <p class="mb-0 text-muted">{{ r.review }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- User Listings -->
+    <div class="col-lg-8">
+        <h4 class="section-title mb-4">{{ profile_user.username }}'s Listings ({{ total }})</h4>
+
+        <div class="row g-3">
+            {% for listing in listings %}
+            <div class="col-md-6">
+                <div class="card listing-card h-100">
+
+                    {% if listing.image_path %}
+                    <img src="{{ url_for('static', filename=listing.image_path) }}" class="card-img-top" alt="{{ listing.title }}">
+                    {% else %}
+                    <div class="img-placeholder" style="height: 140px;"><i class="bi bi-image"></i></div>
+                    {% endif %}
+
+                    <div class="card-body">
+                        <span class="category-badge small mb-2 d-inline-block">{{ listing.category }}</span>
+                        <h6 class="fw-bold">{{ listing.title }}</h6>
+
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted"><i class="bi bi-geo-alt"></i> {{ listing.city }}</small>
+                            <a href="{{ url_for('sprint1_listings.view_listing', listing_id=listing.id) }}" class="small">View</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not listings %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">No listings from this user.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

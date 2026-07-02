@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block main_class %}{% endblock %}
+
+{% block extra_head %}
+<style>
+.auth-split { min-height: calc(100vh - 72px); display: flex; }
+.auth-left {
+    flex: 0 0 42%;
+    background: linear-gradient(135deg, #059669 0%, #10B981 50%, #2563EB 100%);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 3rem; color: white; position: relative; overflow: hidden;
+}
+.auth-left::before {
+    content: ''; position: absolute; width: 320px; height: 320px;
+    background: rgba(255,255,255,0.07); border-radius: 50%;
+    top: -80px; right: -80px;
+}
+.auth-left::after {
+    content: ''; position: absolute; width: 200px; height: 200px;
+    background: rgba(255,255,255,0.05); border-radius: 50%;
+    bottom: -40px; left: -40px;
+}
+.auth-right {
+    flex: 1; display: flex; align-items: flex-start; justify-content: center;
+    padding: 3.5rem 2rem 3rem; background: var(--light-bg); overflow-y: auto;
+}
+.auth-form-box { width: 100%; max-width: 440px; }
+.auth-input-group { position: relative; }
+.auth-input-group .input-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 1rem; pointer-events: none; z-index: 2;
+}
+.auth-input-group .form-control {
+    padding-left: 2.5rem; border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--dark);
+    height: 50px; font-size: 0.97rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.auth-input-group .form-control:focus {
+    border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+}
+.benefit-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: rgba(255,255,255,0.1); border-radius: 12px;
+    padding: 0.75rem 1rem; margin-bottom: 0.75rem;
+}
+@media (max-width: 768px) {
+    .auth-left { display: none; }
+    .auth-right { padding: 2rem 1rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-split">
+
+    <div class="auth-left">
+        <div class="auth-pattern"></div>
+        <div class="position-relative z-1 w-100" style="max-width:340px;">
+            <div class="auth-brand-chip">
+                BENE<span class="text-warning">VOL</span>
+            </div>
+
+            <h2 class="fw-bold mb-2" style="font-size:2rem; line-height:1.15;">Join the<br>movement.</h2>
+            <p class="mb-4" style="opacity:0.85; font-size:1rem;">Be part of a community that gives without expecting anything in return.</p>
+
+            <div class="benefit-row">
+                <i class="bi bi-gift-fill text-warning fs-5 mt-1"></i>
+                <div>
+                    <div class="fw-semibold small">Give Away Items</div>
+                    <div style="opacity:0.7; font-size:0.8rem;">List things you no longer need for free</div>
+                </div>
+            </div>
+            <div class="benefit-row">
+                <i class="bi bi-heart-fill text-warning fs-5 mt-1"></i>
+                <div>
+                    <div class="fw-semibold small">Start Donation Campaigns</div>
+                    <div style="opacity:0.7; font-size:0.8rem;">Raise funds for causes that matter</div>
+                </div>
+            </div>
+            <div class="benefit-row">
+                <i class="bi bi-shield-check text-warning fs-5 mt-1"></i>
+                <div>
+                    <div class="fw-semibold small">Safe &amp; Verified Community</div>
+                    <div style="opacity:0.7; font-size:0.8rem;">Real people, real impact</div>
+                </div>
+            </div>
+
+            <div class="auth-stat-row">
+                <div class="auth-stat"><div class="num">12k+</div><div class="lbl">Members</div></div>
+                <div class="auth-stat"><div class="num">100%</div><div class="lbl">Free</div></div>
+                <div class="auth-stat"><div class="num">30+</div><div class="lbl">Cities</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-right">
+        <div class="auth-form-box fade-in-up">
+            <div class="mb-4">
+                <h3 class="fw-bold mb-1" style="color:var(--dark);">Create your account</h3>
+                <p class="text-muted mb-0" style="font-size:0.92rem;">Already a member? <a href="{{ url_for('sprint1_auth.login') }}" class="fw-semibold text-decoration-none" style="color:var(--primary);">Sign in</a></p>
+            </div>
+
+            <form method="POST" action="{{ url_for('sprint1_auth.register') }}">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small" style="color:var(--dark-soft);">USERNAME</label>
+                    <div class="auth-input-group">
+                        <i class="bi bi-person input-icon"></i>
+                        <input type="text" class="form-control" name="username" value="{{ username|default('') }}" required minlength="3" placeholder="Choose a username">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small" style="color:var(--dark-soft);">EMAIL</label>
+                    <div class="auth-input-group">
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input type="email" class="form-control" name="email" value="{{ email|default('') }}" required placeholder="your@email.com">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small" style="color:var(--dark-soft);">CITY <span class="fw-normal" style="opacity:0.6;">(optional)</span></label>
+                    <div class="auth-input-group">
+                        <i class="bi bi-geo-alt input-icon"></i>
+                        <input type="text" class="form-control" name="city" list="city-reg" autocomplete="off" value="{{ city|default('') }}" placeholder="Type to search your city...">
+                        <datalist id="city-reg">
+                            {% for c in ['Ahmedabad','Bengaluru','Bhopal','Bhubaneswar','Chandigarh','Chennai','Coimbatore','Delhi','Faridabad','Ghaziabad','Goa','Gurugram','Guwahati','Hyderabad','Indore','Jaipur','Kanpur','Kochi','Kolkata','Lucknow','Ludhiana','Madurai','Mumbai','Mysuru','Nagpur','Nashik','Noida','Patna','Pune','Raipur','Rajkot','Ranchi','Surat','Thiruvananthapuram','Vadodara','Varanasi','Vijayawada','Visakhapatnam'] %}<option value="{{ c }}">{% endfor %}
+                        </datalist>
+                    </div>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold small" style="color:var(--dark-soft);">PASSWORD</label>
+                        <div class="auth-input-group">
+                            <i class="bi bi-lock input-icon"></i>
+                            <input type="password" class="form-control" name="password" required minlength="6" placeholder="Min 6 chars">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold small" style="color:var(--dark-soft);">CONFIRM</label>
+                        <div class="auth-input-group">
+                            <i class="bi bi-lock-fill input-icon"></i>
+                            <input type="password" class="form-control" name="confirm_password" required placeholder="Repeat">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn w-100 fw-semibold text-white" style="height:50px; border-radius:10px; font-size:1rem; background:var(--gradient-green); border:none; box-shadow:0 4px 14px rgba(16,185,129,0.3);">
+                    <i class="bi bi-person-plus me-2"></i>Create Free Account
+                </button>
+            </form>
+
+            <p class="text-center text-muted mt-3 mb-0" style="font-size:0.8rem;">
+                By signing up you agree to our community guidelines.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
