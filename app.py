@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from markupsafe import Markup, escape
 from config import Config
 from database import init_db, seed_demo_data
 from feature_flags import resolve_flags
@@ -8,6 +9,17 @@ from feature_flags import resolve_flags
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    @app.template_filter('nl2br')
+    def nl2br(value):
+        """HTML-escape user text, then convert real newlines to <br> tags.
+        Escaping happens on a plain str via str.replace (not Jinja's
+        autoescape-aware `replace` filter) so the inserted <br> tags are
+        never re-escaped themselves."""
+        if not value:
+            return ''
+        safe_text = str(escape(value))
+        return Markup(safe_text.replace('\n', '<br>'))
 
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
