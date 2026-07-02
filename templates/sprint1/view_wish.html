@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}{{ wish['title'] }}{% endblock %}
+
+{% set urgency_styles = {
+    'Urgent': 'background:rgba(239,68,68,0.12); color:#EF4444;',
+    'High':   'background:rgba(249,115,22,0.12); color:#F97316;',
+    'Normal': 'background:rgba(37,99,235,0.10); color:#2563EB;',
+    'Low':    'background:rgba(16,185,129,0.12); color:#10B981;'
+} %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        {% if wish['status'] == 'fulfilled' %}
+        <div class="alert d-flex align-items-center gap-2 mb-3 fw-semibold"
+             style="background:var(--gradient-green); color:white; border:none; border-radius:12px;">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            This wish has been fulfilled. Thank you to the cuties!
+        </div>
+        {% endif %}
+
+        <div class="card shadow-sm">
+
+            <!-- Header strip -->
+            <div class="d-flex align-items-center gap-3 p-4"
+                 style="background:linear-gradient(120deg,#7C3AED 0%,#A855F7 45%,#F97316 100%); color:#fff; border-radius:14px 14px 0 0;">
+                <div class="d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:54px;height:54px;border-radius:15px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);font-size:1.55rem;">
+                    <i class="bi bi-stars"></i>
+                </div>
+                <div>
+                    <div style="opacity:0.85; font-size:0.8rem; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;">A wish from the cuties</div>
+                    <h3 class="fw-bold mb-0">{{ wish['title'] }}</h3>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+
+                <!-- Badges row -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="category-badge">{{ wish['category'] }}</span>
+                    <span class="badge rounded-pill" style="{{ urgency_styles.get(wish['urgency'], urgency_styles['Normal']) }} font-weight:700; padding:0.35rem 0.7rem;">
+                        {% if wish['urgency'] in ['Urgent','High'] %}<i class="bi bi-exclamation-circle-fill me-1"></i>{% endif %}{{ wish['urgency'] }} priority
+                    </span>
+                    <span class="badge bg-light text-dark rounded-pill">
+                        <i class="bi bi-geo-alt me-1"></i>{{ wish['city'] }}
+                    </span>
+                </div>
+
+                <!-- Actions: owner/admin delete · others report + message -->
+                {% if session.get('user_id') %}
+                {% set is_owner = session.user_id == wish['user_id'] %}
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    {% if is_owner or session.get('role') == 'admin' %}
+                    <form action="{{ url_for('sprint1_wishes.delete', wish_id=wish['id']) }}" method="POST" class="delete-form d-inline">
+                        <button type="submit" class="btn btn-outline-danger" style="border-radius:10px;"><i class="bi bi-trash me-1"></i>Delete</button>
+                    </form>
+                    {% endif %}
+                    {% if not is_owner %}
+                        {% if config.SPRINT2 %}
+                            {% if not has_reported %}
+                            <button type="button" class="btn btn-outline-danger" style="border-radius:10px;" data-bs-toggle="modal" data-bs-target="#reportModal"><i class="bi bi-flag me-1"></i>Report</button>
+                            {% else %}
+                            <span class="btn btn-outline-secondary disabled" style="border-radius:10px;"><i class="bi bi-flag-fill me-1"></i>Reported</span>
+                            {% endif %}
+                        {% endif %}
+                        {% if config.SPRINT3 %}
+                        <button type="button" class="btn btn-primary" style="border-radius:10px;" data-bs-toggle="modal" data-bs-target="#messageModal"><i class="bi bi-envelope me-1"></i>Message</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Details -->
+                <h5 class="fw-bold mb-3"><i class="bi bi-text-paragraph me-2 text-primary"></i>The Story</h5>
+                <div class="text-muted lh-lg">
+                    {{ wish['description']|replace('\n', '<br>')|safe }}
+                </div>
+
+                {% if wish['status'] == 'active' %}
+                <hr style="border-color:var(--border);" class="my-4">
+
+                <!-- Help CTA -->
+                <h5 class="fw-bold mb-3"><i class="bi bi-heart-fill me-2 text-danger"></i>Can you help?</h5>
+                <div class="d-flex gap-3 mb-2 flex-wrap">
+                    <a href="tel:{{ wish['contact'] }}" class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-telephone me-2"></i>Call to Help
+                    </a>
+                    <a href="https://wa.me/91{{ wish['contact'] }}" target="_blank"
+                       class="btn btn-outline-success btn-lg px-4">
+                        <i class="bi bi-whatsapp me-2"></i>WhatsApp
+                    </a>
+                    <button class="btn btn-outline-secondary btn-lg" onclick="copyLink()">
+                        <i class="bi bi-share me-2"></i>Share
+                    </button>
+                </div>
+                {% endif %}
+
+                <hr style="border-color:var(--border);" class="my-4">
+
+                <!-- Meta info -->
+                <div class="row g-3">
+                    <div class="col-6 col-md-4 text-center">
+                        <div class="p-3 rounded-3" style="background:var(--surface-alt);">
+                            <i class="bi bi-person-circle text-primary fs-4 d-block mb-1"></i>
+                            <div class="small text-muted">Wished by</div>
+                            <div class="fw-semibold small">{{ wish['username'] }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-4 text-center">
+                        <div class="p-3 rounded-3" style="background:var(--surface-alt);">
+                            <i class="bi bi-geo-alt text-success fs-4 d-block mb-1"></i>
+                            <div class="small text-muted">Location</div>
+                            <div class="fw-semibold small">{{ wish['city'] }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 text-center">
+                        <div class="p-3 rounded-3" style="background:var(--surface-alt);">
+                            <i class="bi bi-calendar text-warning fs-4 d-block mb-1"></i>
+                            <div class="small text-muted">Posted</div>
+                            <div class="fw-semibold small">{{ wish['created_at'][:10] }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Owner action: mark fulfilled -->
+                {% if session.get('user_id') == wish['user_id'] and wish['status'] == 'active' %}
+                <form method="POST" action="{{ url_for('sprint1_wishes.fulfill', wish_id=wish['id']) }}"
+                      class="mt-4 p-3 rounded-3 d-flex gap-2 align-items-center justify-content-between flex-wrap"
+                      style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2);"
+                      onsubmit="return confirm('Mark this wish as fulfilled?');">
+                    <span class="small text-muted"><i class="bi bi-info-circle me-1 text-success"></i>Got what you wished for? Let the cuties know.</span>
+                    <button type="submit" class="btn btn-success fw-semibold" style="border-radius:10px;">
+                        <i class="bi bi-check-circle me-2"></i>Mark as Fulfilled
+                    </button>
+                </form>
+                {% endif %}
+
+                <!-- Back link -->
+                <div class="mt-4">
+                    <a href="{{ url_for('sprint1_wishes.wishes') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Wishes
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Safety notice -->
+        <div class="mt-3 p-3 rounded-3 d-flex gap-2 align-items-start"
+             style="background:rgba(37,99,235,0.07); border:1px solid rgba(37,99,235,0.15);">
+            <i class="bi bi-shield-check text-primary fs-5 flex-shrink-0 mt-1"></i>
+            <div class="small text-muted">
+                <strong class="text-primary">Stay safe.</strong>
+                Arrange handovers in public places and never share sensitive personal
+                or financial information. BENEVOL connects people but does not verify
+                individual requests.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% if config.SPRINT2 and session.get('user_id') and session.user_id != wish['user_id'] %}
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:16px; border:1px solid var(--border); background:var(--surface);">
+            <div class="modal-header" style="background:linear-gradient(135deg,#EF4444,#DC2626); color:white; border-radius:16px 16px 0 0; border:none;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-flag me-2"></i>Report Wish</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('sprint2_reports.report_target', target_type='wish', target_id=wish['id']) }}" method="POST">
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">Why are you reporting <strong>{{ wish['title'] }}</strong>?</p>
+                    <select class="form-select mb-3" style="border-radius:10px; border:1.5px solid var(--border);" onchange="document.getElementById('wreason').value = this.value == 'other' ? '' : this.value">
+                        <option value="">Select a reason...</option>
+                        <option value="Spam or misleading">Spam or misleading</option>
+                        <option value="Inappropriate content">Inappropriate content</option>
+                        <option value="Scam or fraudulent">Scam or fraudulent</option>
+                        <option value="Duplicate request">Duplicate request</option>
+                        <option value="other">Other (specify below)</option>
+                    </select>
+                    <textarea class="form-control" id="wreason" name="reason" rows="3" placeholder="Describe the issue..." required style="border-radius:10px; border:1.5px solid var(--border);"></textarea>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--border);">
+                    <button type="button" class="btn btn-outline-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger fw-semibold" style="border-radius:8px;"><i class="bi bi-flag me-1"></i>Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if config.SPRINT3 and session.get('user_id') and session.user_id != wish['user_id'] %}
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:16px; border:1px solid var(--border); background:var(--surface);">
+            <div class="modal-header" style="background:var(--gradient-primary); color:white; border-radius:16px 16px 0 0; border:none;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-envelope me-2"></i>Message {{ wish['username'] }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('sprint3_messages.send', target_type='wish', target_id=wish['id']) }}" method="POST">
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">Send a message about <strong>{{ wish['title'] }}</strong></p>
+                    {% for msg in preset_messages %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="message_text" id="wmsg{{ loop.index }}" value="{{ msg }}" required>
+                        <label class="form-check-label small" for="wmsg{{ loop.index }}" style="color:var(--dark);">{{ msg }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--border);">
+                    <button type="button" class="btn btn-outline-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-semibold" style="border-radius:8px;"><i class="bi bi-send me-1"></i>Send Message</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+        const btn = document.querySelector('[onclick="copyLink()"]');
+        btn.innerHTML = '<i class="bi bi-check2 me-2"></i>Copied!';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-outline-secondary');
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-share me-2"></i>Share';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

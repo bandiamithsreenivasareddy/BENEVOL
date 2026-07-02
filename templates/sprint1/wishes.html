@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Wishes{% endblock %}
+{% block main_class %}{% endblock %}
+
+{% set category_icons = {
+    'Electronics': 'laptop',
+    'Furniture': 'house-door',
+    'Books': 'book',
+    'Clothing': 'bag',
+    'Sports': 'bicycle',
+    'Kitchen': 'cup-hot',
+    'Toys': 'controller',
+    'Tools': 'wrench',
+    'Garden': 'flower1',
+    'Other': 'stars'
+} %}
+{% set urgency_styles = {
+    'Urgent': 'background:rgba(239,68,68,0.12); color:#EF4444;',
+    'High':   'background:rgba(249,115,22,0.12); color:#F97316;',
+    'Normal': 'background:rgba(37,99,235,0.10); color:#2563EB;',
+    'Low':    'background:rgba(16,185,129,0.12); color:#10B981;'
+} %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="wish-hero py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7 fade-in-up">
+                <h1 class="fw-bold display-5 mb-3">
+                    Make a Wish <i class="bi bi-stars text-warning"></i>
+                </h1>
+                <p class="lead mb-2 opacity-90 fw-semibold">
+                    Post what you need, let the cuties help.
+                </p>
+                <p class="mb-4 opacity-75">
+                    Share your wish with honest details. Kind givers can reach out directly
+                    to fulfill it — no money involved, just people helping people.
+                </p>
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('sprint1_wishes.create') }}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
+                    <i class="bi bi-stars me-2"></i>Make a Wish
+                </a>
+                {% else %}
+                <a href="{{ url_for('sprint1_auth.login') }}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Login to Make a Wish
+                </a>
+                {% endif %}
+            </div>
+            <div class="col-lg-5 d-none d-lg-flex justify-content-center gap-4 text-white text-center">
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-stars fs-2"></i></div>
+                    <div class="fw-semibold small">Wish</div>
+                </div>
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-people-fill fs-2"></i></div>
+                    <div class="fw-semibold small">Cuties</div>
+                </div>
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-gift-fill fs-2"></i></div>
+                    <div class="fw-semibold small">Receive</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filters + Wishes -->
+<section class="py-5">
+    <div class="container">
+
+        <!-- Category filter pills -->
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <a href="{{ url_for('sprint1_wishes.wishes', urgency=urgency) }}"
+               class="btn btn-sm rounded-pill {{ 'btn-primary' if not category else 'btn-outline-secondary' }}">
+                All
+            </a>
+            {% for cat in categories %}
+            <a href="{{ url_for('sprint1_wishes.wishes', category=cat, urgency=urgency) }}"
+               class="btn btn-sm rounded-pill {{ 'btn-primary' if category == cat else 'btn-outline-secondary' }}">
+                {{ cat }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Urgency filter -->
+        <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
+            <small class="text-muted fw-semibold me-1">PRIORITY:</small>
+            <a href="{{ url_for('sprint1_wishes.wishes', category=category) }}"
+               class="btn btn-sm {{ 'btn-dark' if not urgency else 'btn-outline-secondary' }} rounded-pill">All</a>
+            {% for lvl in urgency_levels %}
+            <a href="{{ url_for('sprint1_wishes.wishes', category=category, urgency=lvl) }}"
+               class="btn btn-sm rounded-pill {{ 'btn-primary' if urgency == lvl else 'btn-outline-primary' }}">
+               {% if lvl in ['Urgent','High'] %}<i class="bi bi-exclamation-circle me-1"></i>{% endif %}{{ lvl }}</a>
+            {% endfor %}
+            <div class="ms-auto">
+                <span class="text-muted small">{{ total }} wish{{ 'es' if total != 1 else '' }}</span>
+            </div>
+        </div>
+
+        <!-- Wish Cards -->
+        <div class="row g-4">
+            {% for wish in wishes %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card wish-card clickable-card h-100 position-relative fade-in-up">
+                    <div class="wish-img-placeholder">
+                        <i class="bi bi-{{ category_icons.get(wish['category'], 'stars') }}"></i>
+                        <span class="wish-urgency-tag badge rounded-pill" style="{{ urgency_styles.get(wish['urgency'], urgency_styles['Normal']) }}">
+                            {% if wish['urgency'] in ['Urgent','High'] %}<i class="bi bi-exclamation-circle-fill me-1"></i>{% endif %}{{ wish['urgency'] }}
+                        </span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="category-badge">{{ wish['category'] }}</span>
+                        </div>
+                        <h6 class="fw-bold mb-1">
+                            <a href="{{ url_for('sprint1_wishes.view_wish', wish_id=wish['id']) }}" class="stretched-link text-decoration-none" style="color:var(--dark);">{{ wish['title'] }}</a>
+                        </h6>
+                        <p class="text-muted small flex-grow-1">
+                            {{ wish['description'][:110] }}{% if wish['description']|length > 110 %}...{% endif %}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <small class="text-muted"><i class="bi bi-geo-alt text-primary me-1"></i>{{ wish['city'] }}</small>
+                            <small class="text-muted" style="font-size:0.72rem;"><i class="bi bi-person me-1"></i>{{ wish['username'] }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-stars display-1 text-muted"></i>
+                <h5 class="text-muted mt-3">No wishes found</h5>
+                <p class="text-muted">Be the first to share what you're hoping for!</p>
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('sprint1_wishes.create') }}" class="btn btn-primary">
+                    <i class="bi bi-stars me-2"></i>Make a Wish
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {{ 'active' if p == page }}">
+                    <a class="page-link" href="{{ url_for('sprint1_wishes.wishes', page=p, category=category, urgency=urgency) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.wish-hero {
+    background: linear-gradient(135deg, #7C3AED 0%, #6366F1 45%, #2563EB 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+.wish-hero::before {
+    content: '';
+    position: absolute; top: -40%; right: -15%;
+    width: 55%; height: 200%;
+    background: rgba(255,255,255,0.05);
+    transform: rotate(12deg); border-radius: 50%;
+}
+.wish-img-placeholder {
+    position: relative;
+    height: 150px;
+    background: linear-gradient(135deg, var(--surface-alt) 0%, var(--border) 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary); font-size: 3rem;
+}
+.wish-urgency-tag {
+    position: absolute; top: 12px; right: 12px;
+    font-size: 0.7rem; font-weight: 700; padding: 0.32rem 0.7rem;
+    backdrop-filter: blur(4px);
+}
+.wish-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.wish-card:hover { transform: translateY(-5px); }
+</style>
+{% endblock %}

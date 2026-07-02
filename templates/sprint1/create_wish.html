@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Make a Wish{% endblock %}
+{% block main_class %}page-bg-form{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:780px;">
+
+    <form method="POST" action="{{ url_for('sprint1_wishes.create') }}">
+        <div class="form-card">
+
+            <!-- Banner Header -->
+            <div class="form-banner">
+                <div class="fb-icon"><i class="bi bi-stars"></i></div>
+                <div>
+                    <h4>Make a Wish</h4>
+                    <p>Tell the cuties what you need — someone nearby may have exactly that to give.</p>
+                </div>
+            </div>
+
+            <!-- Block 1: The wish -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-purple"><i class="bi bi-stars"></i></span>What do you wish for?</div>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold small">YOUR WISH <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" name="title"
+                               value="{{ title|default('') }}" required minlength="4"
+                               placeholder="e.g., Study table for my daughter">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">CATEGORY <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-lg" name="category" required>
+                            <option value="">Select...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {{ 'selected' if category|default('') == cat }}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 2: Details -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-green"><i class="bi bi-text-paragraph"></i></span>Tell us more <span class="text-danger">*</span></div>
+                <textarea class="form-control" name="description" rows="5" required minlength="20"
+                          placeholder="Explain what you need and why it would help. The more genuine detail you share, the more likely someone is to reach out and fulfill your wish.">{{ description|default('') }}</textarea>
+            </div>
+
+            <!-- Block 3: Urgency -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-orange"><i class="bi bi-alarm"></i></span>How urgent is it?</div>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for lvl in urgency_levels %}
+                    <div class="cat-tile">
+                        <input type="radio" name="urgency" id="urg_{{ loop.index }}" value="{{ lvl }}"
+                               {% if urgency|default('Normal') == lvl %}checked{% endif %}>
+                        <label for="urg_{{ loop.index }}">{{ lvl }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Block 4: Location & contact -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-blue"><i class="bi bi-geo-alt-fill"></i></span>Location &amp; Contact</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">CITY <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="city"
+                               list="wish-cities" autocomplete="off" required
+                               placeholder="Type to search city..." value="{{ city|default('') }}">
+                        <datalist id="wish-cities">
+                            {% for c in ['Ahmedabad','Bengaluru','Bhopal','Bhubaneswar','Chandigarh','Chennai','Coimbatore','Delhi','Faridabad','Ghaziabad','Goa','Gurugram','Guwahati','Hyderabad','Indore','Jaipur','Kanpur','Kochi','Kolkata','Lucknow','Ludhiana','Madurai','Mumbai','Mysuru','Nagpur','Nashik','Noida','Patna','Pune','Raipur','Rajkot','Ranchi','Surat','Thiruvananthapuram','Vadodara','Varanasi','Vijayawada','Visakhapatnam'] %}<option value="{{ c }}">{% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">CONTACT <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" name="contact"
+                               value="{{ contact|default('') }}" required placeholder="9876543210">
+                        <div class="form-text">So a kind giver can reach you. Only shown to logged-in users.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="form-card-footer">
+                <a href="{{ url_for('sprint1_wishes.wishes') }}" class="btn btn-outline-secondary px-4 d-inline-flex align-items-center" style="border-radius:10px; height:46px;">Cancel</a>
+                <button type="submit" class="btn btn-primary px-5 fw-semibold" style="border-radius:10px; height:46px;">
+                    <i class="bi bi-stars me-2"></i>Post My Wish
+                </button>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+{% endblock %}
