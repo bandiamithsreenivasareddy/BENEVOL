@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Start a Campaign{% endblock %}
+{% block main_class %}page-bg-form{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:780px;">
+
+    <form method="POST" action="{{ url_for('sprint1_donations.create_donation') }}" enctype="multipart/form-data">
+        <div class="form-card">
+
+            <!-- Banner Header -->
+            <div class="form-banner is-green">
+                <div class="fb-icon"><i class="bi bi-heart-fill"></i></div>
+                <div>
+                    <h4>Start a Donation Campaign</h4>
+                    <p>Tell your story honestly — the clearest campaigns receive the most support.</p>
+                </div>
+            </div>
+
+            <!-- Block 1: Type -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-blue"><i class="bi bi-person-badge-fill"></i></span>Who is raising funds?</div>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <input type="radio" class="btn-check" name="campaign_type" id="type_personal" value="personal" checked>
+                        <label for="type_personal" class="type-choice-card">
+                            <div class="type-choice-icon" style="background:var(--gradient-primary);">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="color:var(--dark);">Personal</div>
+                                <div class="text-muted small">Individual raising funds for a personal need</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-sm-6">
+                        <input type="radio" class="btn-check" name="campaign_type" id="type_trust" value="trust">
+                        <label for="type_trust" class="type-choice-card">
+                            <div class="type-choice-icon" style="background:var(--gradient-green);">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="color:var(--dark);">Trust / NGO</div>
+                                <div class="text-muted small">Registered trust or non-profit organisation</div>
+                            </div>
+                        </label>
+                    </div>
+                    {% if session.get('role') == 'admin' %}
+                    <div class="col-sm-6">
+                        <input type="radio" class="btn-check" name="campaign_type" id="type_benevol" value="benevol">
+                        <label for="type_benevol" class="type-choice-card">
+                            <div class="type-choice-icon" style="background:var(--gradient-orange);">
+                                <i class="bi bi-heart-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="color:var(--dark);">BENEVOL Official</div>
+                                <div class="text-muted small">Platform fund campaign</div>
+                            </div>
+                        </label>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Block 2: Details -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-purple"><i class="bi bi-tag-fill"></i></span>Campaign Details</div>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold small">CAMPAIGN TITLE <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" name="title"
+                               value="{{ title|default('') }}" required minlength="5"
+                               placeholder="e.g., Surgery Fund for Ravi Kumar">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">CATEGORY <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-lg" name="category" required>
+                            <option value="">Select...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {{ 'selected' if category|default('') == cat }}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">ORGANISATION / TRUST NAME <span class="text-muted fw-normal">(if applicable)</span></label>
+                        <input type="text" class="form-control" name="org_name"
+                               value="{{ org_name|default('') }}"
+                               placeholder="e.g., Hope Foundation, XYZ NGO">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 3: Story -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-green"><i class="bi bi-journal-text"></i></span>Your Story <span class="text-danger">*</span></div>
+                <textarea class="form-control" name="purpose" rows="6" required minlength="50"
+                          id="purposeArea"
+                          placeholder="Tell your story clearly:&#10;• What happened or what is the situation?&#10;• Why do you need financial support?&#10;• How exactly will the money be used?&#10;• What changes if your goal is reached?&#10;&#10;Be specific and honest — donors connect with real stories.">{{ purpose|default('') }}</textarea>
+                <div class="d-flex justify-content-between mt-1">
+                    <span class="form-text">Minimum 50 characters. The more detail, the better.</span>
+                    <span class="form-text" id="charCountDisplay" style="font-weight:600;">0 chars</span>
+                </div>
+            </div>
+
+            <!-- Block 4: Goal + Location -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-orange"><i class="bi bi-bullseye"></i></span>Goal &amp; Contact</div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">TARGET AMOUNT (₹) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background:var(--surface-alt); border:1.5px solid var(--border); border-right:none; border-radius:10px 0 0 10px; color:var(--muted);">₹</span>
+                            <input type="number" class="form-control" name="target_amount"
+                                   style="border-radius:0 10px 10px 0;"
+                                   value="{{ target_amount|default('') }}" required min="100" step="100"
+                                   placeholder="50000">
+                        </div>
+                        <div class="form-text">Minimum ₹100.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">CITY <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="city"
+                               list="city-opts" autocomplete="off" required
+                               placeholder="Type city..." value="{{ city|default('') }}">
+                        <datalist id="city-opts">
+                            {% for c in ['Ahmedabad','Bengaluru','Bhopal','Bhubaneswar','Chandigarh','Chennai','Coimbatore','Delhi','Faridabad','Ghaziabad','Goa','Gurugram','Guwahati','Hyderabad','Indore','Jaipur','Kanpur','Kochi','Kolkata','Lucknow','Ludhiana','Madurai','Mumbai','Mysuru','Nagpur','Nashik','Noida','Patna','Pune','Raipur','Rajkot','Ranchi','Surat','Thiruvananthapuram','Vadodara','Varanasi','Vijayawada','Visakhapatnam'] %}<option value="{{ c }}">{% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">CONTACT <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" name="contact"
+                               value="{{ contact|default('') }}" required placeholder="9876543210">
+                        <div class="form-text">Donors may call to verify.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 5: Proof -->
+            <div class="form-group-block">
+                <div class="form-group-label">
+                    <span class="fg-icon fg-pink"><i class="bi bi-file-earmark-image-fill"></i></span>Supporting Proof
+                    <span class="badge ms-1" style="background:rgba(16,185,129,0.12); color:var(--secondary); font-size:0.65rem; font-weight:600; border-radius:20px; padding:0.25rem 0.6rem; text-transform:none; letter-spacing:0;">Strongly Recommended</span>
+                </div>
+                <div class="upload-drop-zone" id="uploadZone" onclick="document.getElementById('proofInput').click()">
+                    <i class="bi bi-file-earmark-arrow-up" style="font-size:2.5rem; color:var(--primary); opacity:0.5;"></i>
+                    <p class="fw-semibold mt-2 mb-1" style="color:var(--dark);">Upload a medical report, certificate, or supporting photo</p>
+                    <p class="text-muted small mb-0">JPG, PNG, WebP · Max 5MB · Campaigns with proof get <strong>3× more support</strong></p>
+                </div>
+                <input type="file" id="proofInput" name="proof" accept="image/*" class="d-none">
+                <img id="proofPreview" class="mt-3 rounded-3 w-100" style="display:none; max-height:240px; object-fit:cover;">
+            </div>
+
+            <!-- Footer -->
+            <div class="form-card-footer">
+                <a href="{{ url_for('sprint1_donations.donate') }}" class="btn btn-outline-secondary px-4 d-inline-flex align-items-center" style="border-radius:10px; height:46px;">Cancel</a>
+                <button type="submit" class="btn btn-primary px-5 fw-semibold" style="border-radius:10px; height:46px;">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Launch Campaign
+                </button>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.type-choice-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 1rem 1.1rem; border: 1.5px solid var(--border);
+    border-radius: 14px; cursor: pointer; width: 100%;
+    background: var(--surface); transition: all 0.2s;
+}
+.type-choice-card:hover { border-color: var(--primary); }
+.btn-check:checked + .type-choice-card {
+    border-color: var(--primary);
+    background: rgba(37,99,235,0.06);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.type-choice-icon {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.2rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const purposeArea = document.getElementById('purposeArea');
+const charDisplay = document.getElementById('charCountDisplay');
+purposeArea.addEventListener('input', function() {
+    const n = this.value.length;
+    charDisplay.textContent = n + ' chars';
+    charDisplay.style.color = n < 50 ? 'var(--accent)' : 'var(--secondary)';
+});
+
+const proofInput = document.getElementById('proofInput');
+const proofPreview = document.getElementById('proofPreview');
+const uploadZone = document.getElementById('uploadZone');
+proofInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        proofPreview.src = e.target.result;
+        proofPreview.style.display = 'block';
+        uploadZone.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+</script>
+{% endblock %}

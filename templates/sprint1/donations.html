@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Donate{% endblock %}
+{% block main_class %}{% endblock %}
+
+{% set category_icons = {
+    'Health & Medical': 'heart-pulse',
+    'Education': 'mortarboard',
+    'Disaster Relief': 'house-exclamation',
+    'Animal Welfare': 'emoji-smile',
+    'Environment': 'tree',
+    'Community Development': 'people',
+    'Emergency Aid': 'exclamation-triangle',
+    'Children & Youth': 'balloon',
+    'Elderly Care': 'person-wheelchair',
+    'Other': 'gift'
+} %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="donate-hero py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7 fade-in-up">
+                <h1 class="fw-bold display-5 mb-3">
+                    Make a Difference <i class="bi bi-heart-fill text-warning"></i>
+                </h1>
+                <p class="lead mb-4 opacity-90">
+                    Support causes that matter. Every contribution — big or small —
+                    creates real impact in someone's life.
+                </p>
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('sprint1_donations.create_donation') }}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
+                    <i class="bi bi-plus-circle me-2"></i>Start a Campaign
+                </a>
+                {% else %}
+                <a href="{{ url_for('sprint1_auth.login') }}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Login to Start a Campaign
+                </a>
+                {% endif %}
+            </div>
+            <div class="col-lg-5 d-none d-lg-flex justify-content-center gap-4 text-white text-center">
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-heart-pulse fs-2"></i></div>
+                    <div class="fw-semibold small">Health</div>
+                </div>
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-mortarboard fs-2"></i></div>
+                    <div class="fw-semibold small">Education</div>
+                </div>
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-people-fill fs-2"></i></div>
+                    <div class="fw-semibold small">Community</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benevol Featured Campaign -->
+{% if featured %}
+<section class="py-4" style="background: linear-gradient(135deg, #0F1E3C 0%, #162447 60%, #1a3a6b 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-1 text-center d-none d-md-block">
+                <div class="icon-circle icon-circle-orange mx-auto">
+                    <i class="bi bi-building-fill-check"></i>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge" style="background:var(--gradient-orange); font-size:0.72rem; letter-spacing:0.5px;">OFFICIAL BENEVOL CAMPAIGN</span>
+                </div>
+                <h5 class="fw-bold text-white mb-1">{{ featured['title'] }}</h5>
+                <p class="text-white opacity-75 small mb-0">{{ featured['purpose'][:160] }}...</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{{ url_for('sprint1_donations.view_campaign', campaign_id=featured['id']) }}" class="btn btn-warning fw-semibold px-4">
+                    Support Us <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Filters + Campaigns -->
+<section class="py-5">
+    <div class="container">
+
+        <!-- Category filter pills -->
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <a href="{{ url_for('sprint1_donations.donate') }}"
+               class="btn btn-sm rounded-pill {{ 'btn-primary' if not category else 'btn-outline-secondary' }}">
+                All
+            </a>
+            {% for cat in categories %}
+            <a href="{{ url_for('sprint1_donations.donate', category=cat) }}"
+               class="btn btn-sm rounded-pill {{ 'btn-primary' if category == cat else 'btn-outline-secondary' }}">
+                {{ cat }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Type filter -->
+        <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
+            <small class="text-muted fw-semibold me-1">FILTER BY:</small>
+            <a href="{{ url_for('sprint1_donations.donate', category=category) }}"
+               class="btn btn-sm {{ 'btn-dark' if not camp_type else 'btn-outline-secondary' }} rounded-pill">All Types</a>
+            <a href="{{ url_for('sprint1_donations.donate', category=category, type='personal') }}"
+               class="btn btn-sm {{ 'btn-primary' if camp_type=='personal' else 'btn-outline-primary' }} rounded-pill">
+               <i class="bi bi-person me-1"></i>Personal</a>
+            <a href="{{ url_for('sprint1_donations.donate', category=category, type='trust') }}"
+               class="btn btn-sm {{ 'btn-success' if camp_type=='trust' else 'btn-outline-success' }} rounded-pill">
+               <i class="bi bi-building me-1"></i>Trust / NGO</a>
+
+            <div class="ms-auto">
+                <span class="text-muted small">{{ total }} campaign{{ 's' if total != 1 }}</span>
+            </div>
+        </div>
+
+        <!-- Campaign Cards -->
+        <div class="row g-4">
+            {% for c in campaigns %}
+            {% if c['campaign_type'] != 'benevol' %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card donation-card clickable-card h-100 position-relative fade-in-up">
+                    {% if c['proof_path'] %}
+                    <img src="{{ url_for('static', filename=c['proof_path']) }}"
+                         class="card-img-top" alt="{{ c['title'] }}" style="height:180px; object-fit:cover;">
+                    {% else %}
+                    <div class="donate-img-placeholder">
+                        <i class="bi bi-{{ category_icons.get(c['category'], 'heart') }}"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="category-badge">{{ c['category'] }}</span>
+                            <span class="badge rounded-pill
+                                {{ 'bg-primary' if c['campaign_type']=='personal' else 'bg-success' }}">
+                                {{ 'Personal' if c['campaign_type']=='personal' else 'Trust / NGO' }}
+                            </span>
+                        </div>
+                        <h6 class="fw-bold mb-1">
+                            <a href="{{ url_for('sprint1_donations.view_campaign', campaign_id=c['id']) }}" class="stretched-link text-decoration-none" style="color:var(--dark);">{{ c['title'] }}</a>
+                        </h6>
+                        {% if c['org_name'] %}
+                        <div class="text-muted small mb-1"><i class="bi bi-building me-1"></i>{{ c['org_name'] }}</div>
+                        {% endif %}
+                        <p class="text-muted small flex-grow-1">
+                            {{ c['purpose'][:110] }}{% if c['purpose']|length > 110 %}...{% endif %}
+                        </p>
+                        <div class="mt-auto">
+                            {% set pct = [(c['amount_raised'] / c['target_amount'] * 100), 100]|min if c['target_amount'] > 0 else 0 %}
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>₹{{ "{:,.0f}".format(c['amount_raised']) }} raised</span>
+                                <span>Goal: ₹{{ "{:,.0f}".format(c['target_amount']) }}</span>
+                            </div>
+                            <div class="progress mb-2" style="height:6px; border-radius:3px;">
+                                <div class="progress-bar" style="width:{{ pct }}%;
+                                    background: {{ 'var(--gradient-green)' if pct >= 75 else 'var(--gradient-primary)' }}">
+                                </div>
+                            </div>
+                            <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ c['city'] }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-heart display-1 text-muted"></i>
+                <h5 class="text-muted mt-3">No campaigns found</h5>
+                <p class="text-muted">Be the first to start one!</p>
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('sprint1_donations.create_donation') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Start a Campaign
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {{ 'active' if p == page }}">
+                    <a class="page-link" href="{{ url_for('sprint1_donations.donate', page=p, category=category, type=camp_type) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.donate-hero {
+    background: var(--gradient-hero);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+.donate-hero::before {
+    content: '';
+    position: absolute; top: -40%; right: -15%;
+    width: 55%; height: 200%;
+    background: rgba(255,255,255,0.05);
+    transform: rotate(12deg); border-radius: 50%;
+}
+.donate-img-placeholder {
+    height: 180px;
+    background: linear-gradient(135deg, var(--surface-alt) 0%, var(--border) 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary); font-size: 3rem;
+}
+.donation-card:hover { transform: translateY(-5px); }
+</style>
+{% endblock %}
