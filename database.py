@@ -344,6 +344,54 @@ def seed_demo_data():
             ))
             print("[DB] BENEVOL platform campaign seeded.")
 
+    # Seed some demo donation campaigns (personal + trust), from both admin and demo
+    cursor.execute("SELECT id FROM users WHERE username = 'demo'")
+    demo_row = cursor.fetchone()
+    if admin_row and demo_row:
+        admin_id = admin_row['id']
+        demo_id = demo_row['id']
+        cursor.execute("SELECT COUNT(*) as cnt FROM donation_campaigns WHERE campaign_type != 'benevol'")
+        if cursor.fetchone()['cnt'] == 0:
+            demo_campaigns = [
+                # title, category, org_name, purpose, target_amount, amount_raised, contact, city, campaign_type, user_id
+                ('Emergency Surgery for My Father', 'Health & Medical', '',
+                 "My father needs an urgent heart surgery that we can't afford on our own. "
+                 "The doctors have given us a two-week window to arrange the funds. Any help, "
+                 "big or small, would mean the world to our family right now.",
+                 150000.0, 62000.0, '9876543210', 'Mumbai', 'personal', admin_id),
+
+                ('Educate a Girl Child - Scholarship Drive', 'Education', 'Asha Foundation',
+                 "We run a scholarship program for girls from low-income families who are the "
+                 "first in their households to attend school. Your donation covers tuition, "
+                 "books, and uniforms for one child for a full academic year.",
+                 200000.0, 145000.0, '9123456789', 'Delhi', 'trust', demo_id),
+
+                ('Flood Relief for Assam Villages', 'Disaster Relief', 'Seva Relief Trust',
+                 "Recent floods have displaced hundreds of families across three villages in "
+                 "Assam. We are distributing food kits, clean water, and temporary shelter "
+                 "material. Every contribution directly reaches an affected family.",
+                 300000.0, 98000.0, '9988776655', 'Guwahati', 'trust', admin_id),
+
+                ('Shelter and Food for Stray Dogs', 'Animal Welfare', '',
+                 "I run a small stray dog shelter out of my home, currently caring for 14 dogs. "
+                 "Funds go toward food, vaccinations, and basic medical care. We also sterilize "
+                 "strays in the neighborhood to keep the population healthy and safe.",
+                 50000.0, 31000.0, '9445566778', 'Bengaluru', 'personal', demo_id),
+
+                ('Rebuild Our Village School Library', 'Education', 'Gyan Setu NGO',
+                 "A fire damaged the library at a government school serving 300+ children. "
+                 "We're raising funds to replace books, shelves, and basic furniture so "
+                 "students have a place to read and study again.",
+                 120000.0, 15000.0, '9876543210', 'Pune', 'trust', admin_id),
+            ]
+            for c in demo_campaigns:
+                cursor.execute('''
+                    INSERT INTO donation_campaigns
+                    (title, category, org_name, purpose, target_amount, amount_raised, contact, city, campaign_type, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', c)
+            print(f"[DB] {len(demo_campaigns)} demo donation campaigns created.")
+
     # Seed some demo wishes
     cursor.execute("SELECT COUNT(*) as cnt FROM wishes")
     if cursor.fetchone()['cnt'] == 0:
