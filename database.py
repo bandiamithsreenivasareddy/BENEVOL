@@ -301,12 +301,12 @@ def seed_demo_data():
 
     if count == 0:
         demo_listings = [
-            ('Wooden Bookshelf', 'Solid wood bookshelf in great condition. 5 shelves.', 'Furniture', 'Mumbai', 'Bandra West, near Carter Road', 'Good', '9876543210', '', 1),
-            ('Python Programming Book', 'Learn Python the hard way. Barely used.', 'Books', 'Delhi', 'Connaught Place, Block C', 'Like New', '9123456789', '', 2),
-            ('Kids Bicycle', 'Suitable for ages 5-8. Minor scratches.', 'Sports', 'Bangalore', 'Koramangala, 5th Block', 'Fair', '9988776655', '', 2),
-            ('Office Chair', 'Ergonomic office chair with lumbar support.', 'Furniture', 'Mumbai', 'Andheri East, Marol', 'Good', '9876543210', '', 1),
-            ('Samsung Galaxy S20', 'Old phone, works perfectly. Factory reset done.', 'Electronics', 'Chennai', 'Anna Nagar, 2nd Avenue', 'Good', '9445566778', '', 2),
-            ('Winter Jacket', 'Size L, barely worn. Perfect for cold weather.', 'Clothing', 'Delhi', 'Lajpat Nagar, Market 2', 'Like New', '9876543210', '', 1)
+            ('Wooden Bookshelf', 'Solid wood bookshelf in great condition. 5 shelves.', 'Furniture', 'Mumbai', 'Bandra West, near Carter Road', 'Good', '9876543210', 'seed/wooden_bookshelf.png', 1),
+            ('Python Programming Book', 'Learn Python the hard way. Barely used.', 'Books', 'Delhi', 'Connaught Place, Block C', 'Like New', '9123456789', 'seed/python_book.jpg', 2),
+            ('Kids Bicycle', 'Suitable for ages 5-8. Minor scratches.', 'Sports', 'Bangalore', 'Koramangala, 5th Block', 'Fair', '9988776655', 'seed/kids_bicycle.png', 2),
+            ('Office Chair', 'Ergonomic office chair with lumbar support.', 'Furniture', 'Mumbai', 'Andheri East, Marol', 'Good', '9876543210', 'seed/office_chair.png', 1),
+            ('Samsung Galaxy S20', 'Old phone, works perfectly. Factory reset done.', 'Electronics', 'Chennai', 'Anna Nagar, 2nd Avenue', 'Good', '9445566778', 'seed/galaxy_s20.png', 2),
+            ('Winter Jacket', 'Size L, barely worn. Perfect for cold weather.', 'Clothing', 'Delhi', 'Lajpat Nagar, Market 2', 'Like New', '9876543210', 'seed/winter_jacket.jpg', 1)
         ]
 
         for item in demo_listings:
