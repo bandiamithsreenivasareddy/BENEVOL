@@ -10,6 +10,21 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    @app.template_global('image_url')
+    def image_url(path):
+        """Resolve an image_path/proof_path to a displayable URL.
+
+        Uploads saved to Cloudinary are stored as a full https:// URL and
+        used as-is; uploads saved to local disk (fallback when Cloudinary
+        isn't configured, e.g. local dev) are stored as a relative
+        'uploads/xxx' path and resolved through Flask's static route."""
+        if not path:
+            return ''
+        if path.startswith('http://') or path.startswith('https://'):
+            return path
+        from flask import url_for
+        return url_for('static', filename=path)
+
     @app.template_filter('nl2br')
     def nl2br(value):
         """HTML-escape user text, then convert real newlines to <br> tags.

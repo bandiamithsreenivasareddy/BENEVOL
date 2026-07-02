@@ -130,7 +130,7 @@
                 <div class="card listing-card clickable-card h-100 position-relative">
 
                     {% if listing.image_path %}
-                    <img src="{{ url_for('static', filename=listing.image_path) }}" class="card-img-top" alt="{{ listing.title }}">
+                    <img src="{{ image_url(listing.image_path) }}" class="card-img-top" alt="{{ listing.title }}">
                     {% else %}
                     <div class="img-placeholder">
                         <i class="bi bi-image"></i>

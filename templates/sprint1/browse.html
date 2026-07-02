@@ -102,7 +102,7 @@
                 <div class="card give-card clickable-card h-100 position-relative">
                     <div class="img-wrapper" style="overflow:hidden; position:relative; border-radius:14px 14px 0 0;">
                         {% if listing.image_path %}
-                        <img src="{{ url_for('static', filename=listing.image_path) }}" class="card-img-top" alt="{{ listing.title }}" style="height:185px; object-fit:cover; transition:transform 0.4s ease;">
+                        <img src="{{ image_url(listing.image_path) }}" class="card-img-top" alt="{{ listing.title }}" style="height:185px; object-fit:cover; transition:transform 0.4s ease;">
                         {% else %}
                         <div class="give-img-placeholder"><i class="bi bi-box-seam"></i></div>
                         {% endif %}

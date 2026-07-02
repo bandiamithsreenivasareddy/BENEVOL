@@ -74,7 +74,7 @@
                     <div class="mb-2">
                         <label class="form-label fw-semibold">Current Image</label>
                         <br>
-                        <img src="{{ url_for('static', filename=listing.image_path) }}" class="rounded" style="max-height: 150px;">
+                        <img src="{{ image_url(listing.image_path) }}" class="rounded" style="max-height: 150px;">
                     </div>
                     {% endif %}
 

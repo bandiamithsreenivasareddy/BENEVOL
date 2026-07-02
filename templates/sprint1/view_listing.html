@@ -72,7 +72,7 @@
     <div class="col-lg-6">
         <div class="listing-image-wrap fade-in-up">
             {% if listing.image_path %}
-            <img src="{{ url_for('static', filename=listing.image_path) }}" alt="{{ listing.title }}">
+            <img src="{{ image_url(listing.image_path) }}" alt="{{ listing.title }}">
             {% else %}
             <div class="text-center">
                 <i class="bi bi-image" style="font-size:5rem; color:var(--border);"></i>

@@ -51,6 +51,21 @@ The app runs at `http://127.0.0.1:5000`. On first run it creates `daanloop.db` a
 
 > **Before deploying anywhere public:** change/remove these demo credentials, set a real `SECRET_KEY` environment variable, and turn off debug mode. See `BENEVOL_Security_Audit_Report.pdf` for a full pre-deployment security checklist.
 
+## File Uploads on Hosted Environments
+
+Most free hosting (Render's free tier, etc.) has an **ephemeral filesystem** - anything
+written to local disk (uploaded photos, the SQLite database) is wiped on every restart
+or redeploy. To make uploaded photos persist permanently, set:
+
+| Env var | Where to get it |
+|---|---|
+| `CLOUDINARY_URL` | [cloudinary.com](https://cloudinary.com) → free account → Dashboard → copy the "API Environment variable" (looks like `cloudinary://<key>:<secret>@<cloud_name>`) |
+
+When `CLOUDINARY_URL` is set, `save_upload()` (see `utils/helpers.py`) automatically
+uploads photos to Cloudinary instead of local disk, and every template renders images
+through the `image_url()` helper so both local paths and Cloudinary URLs work
+transparently. If unset, uploads fall back to local disk - fine for local development.
+
 ## Project Structure
 
 ```
