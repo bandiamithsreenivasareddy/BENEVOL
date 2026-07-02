@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Admin - Reports{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="section-title mb-0">
+        <i class="bi bi-flag me-2"></i>Reported Items
+    </h2>
+    <div class="btn-group" role="group">
+        <a href="?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Pending
+        </a>
+        <a href="?status=reviewed" class="btn btn-sm {% if status_filter == 'reviewed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Reviewed
+        </a>
+        <a href="?status=dismissed" class="btn btn-sm {% if status_filter == 'dismissed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Dismissed
+        </a>
+        <a href="?status=all" class="btn btn-sm {% if status_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            All
+        </a>
+    </div>
+</div>
+
+{% if reports %}
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Reported By</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                {% set target_links = {
+                    'listing': ('sprint1_listings.view_listing', 'listing_id'),
+                    'wish': ('sprint1_wishes.view_wish', 'wish_id'),
+                    'campaign': ('sprint1_donations.view_campaign', 'campaign_id')
+                } %}
+                <tr>
+                    <td>{{ report.id }}</td>
+                    <td>
+                        {% set ep, arg = target_links.get(report.target_type, target_links['listing']) %}
+                        <a href="{{ url_for(ep, **{arg: report.target_id}) }}" class="fw-semibold text-decoration-none">
+                            {{ report.target_title or '(removed)' }}
+                        </a>
+                        {% if report.listing_status == 'soft_deleted' %}
+                        <span class="badge bg-danger ms-1">Deleted</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if report.target_type == 'wish' %}<span class="badge" style="background:#A855F7;">Wish</span>
+                        {% elif report.target_type == 'campaign' %}<span class="badge bg-success">Campaign</span>
+                        {% else %}<span class="badge bg-primary">Listing</span>{% endif %}
+                    </td>
+                    <td>{{ report.reporter_name }}</td>
+                    <td>
+                        <span class="small">{{ report.reason[:60] }}{% if report.reason|length > 60 %}...{% endif %}</span>
+                    </td>
+                    <td>
+                        <span class="badge {% if report.status == 'pending' %}bg-warning text-dark{% elif report.status == 'reviewed' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ report.status|title }}
+                        </span>
+                    </td>
+                    <td><small class="text-muted">{{ report.created_at }}</small></td>
+                    <td>
+                        {% if report.status == 'pending' %}
+                        <form action="{{ url_for('sprint2_reports.review_report', report_id=report.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="target_type" value="{{ report.target_type }}">
+                            <input type="hidden" name="target_id" value="{{ report.target_id }}">
+                            <button type="submit" name="action" value="remove" class="btn btn-sm btn-danger me-1" data-bs-toggle="tooltip" title="Remove item">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button type="submit" name="action" value="dismiss" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Dismiss report">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-shield-check display-1 text-success"></i>
+    <h4 class="text-muted mt-3">No {{ status_filter }} reports</h4>
+</div>
+{% endif %}
+{% endblock %}
