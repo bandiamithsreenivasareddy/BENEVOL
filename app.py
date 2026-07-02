@@ -33,6 +33,18 @@ def create_app():
     init_db()
     seed_demo_data()
 
+    @app.before_request
+    def log_pageview():
+        from flask import request, session
+        # Only count real page loads: GET requests, skip static files and
+        # the JSON API (those aren't "pages" someone browsed to).
+        if request.method != 'GET':
+            return
+        if request.endpoint in (None, 'static') or (request.endpoint or '').startswith('sprint3_api.'):
+            return
+        from models.pageview_model import log_pageview as _log
+        _log(request.path, session.get('user_id'))
+
     if sprint1:
         from sprint1.auth import auth_bp
         from sprint1.listings import listings_bp
@@ -70,7 +82,9 @@ def create_app():
             'config': {
                 'SPRINT1': sprint1,
                 'SPRINT2': sprint2,
-                'SPRINT3': sprint3
+                'SPRINT3': sprint3,
+                'GA_MEASUREMENT_ID': app.config.get('GA_MEASUREMENT_ID', ''),
+                'CLARITY_PROJECT_ID': app.config.get('CLARITY_PROJECT_ID', ''),
             }
         }
 

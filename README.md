@@ -65,6 +65,22 @@ static/                 # CSS, JS, uploaded images
 utils/                  # Auth helpers, upload handling
 ```
 
+## Analytics
+
+Two layers of visitor tracking are available:
+
+1. **Built-in page-view log** (always on, no setup) — every page load is recorded to a
+   `page_views` table and shown on the admin Analytics dashboard (`/admin/analytics`) as
+   total views, known-visitor count, a 14-day traffic chart, and top pages.
+2. **Google Analytics / Microsoft Clarity** (optional, for click heatmaps and session
+   replays) — set these environment variables on your host to enable them; leave unset
+   to disable (nothing is added to the page if empty):
+
+   | Env var | Where to get it |
+   |---|---|
+   | `GA_MEASUREMENT_ID` | [analytics.google.com](https://analytics.google.com) → create a GA4 property → copy the `G-XXXXXXXXXX` Measurement ID |
+   | `CLARITY_PROJECT_ID` | [clarity.microsoft.com](https://clarity.microsoft.com) → create a project → copy the project ID from the setup snippet |
+
 ## Security
 
 A full manual security audit was performed on this codebase — see [`BENEVOL_Security_Audit_Report.pdf`](./BENEVOL_Security_Audit_Report.pdf) for details on what was found, what was fixed, and what remains to be addressed before production deployment (CSRF protection, rate limiting, security headers, etc.).

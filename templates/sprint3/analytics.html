@@ -54,6 +54,53 @@
             <p>Activity Logs</p>
         </div>
     </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);">
+            <i class="bi bi-eye-fill stat-icon"></i>
+            <h3>{{ stats.total_pageviews }}</h3>
+            <p>Page Views</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card" style="background:linear-gradient(135deg,#334155,#1E293B);">
+            <i class="bi bi-person-check-fill stat-icon"></i>
+            <h3>{{ stats.unique_visitors }}</h3>
+            <p>Known Visitors</p>
+        </div>
+    </div>
+</div>
+
+<!-- Traffic -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="chart-container">
+            <h5 class="fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>Page Views (Last 14 Days)</h5>
+            <canvas id="trafficChart" height="140"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-container h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-list-ol me-2"></i>Top Pages</h5>
+            {% if top_pages %}
+            <table class="table table-sm mb-0">
+                <tbody>
+                    {% for p in top_pages %}
+                    <tr>
+                        <td class="text-truncate small" style="max-width:180px;" title="{{ p.path }}">{{ p.path }}</td>
+                        <td class="text-end fw-bold small">{{ p.cnt }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted small mb-0">No page views logged yet.</p>
+            {% endif %}
+            <p class="text-muted mt-2 mb-0" style="font-size:0.75rem;">
+                <i class="bi bi-info-circle me-1"></i>Built-in counter. For click heatmaps &amp;
+                session replays, connect Microsoft Clarity / Google Analytics (see README).
+            </p>
+        </div>
+    </div>
 </div>
 
 <!-- Charts -->
@@ -91,6 +138,29 @@ document.addEventListener('DOMContentLoaded', function() {
         '#6C63FF', '#FF6B6B', '#2ECC71', '#FFC107', '#0A855F7',
         '#EC4899', '#667EEA', '#F59E0B', '#10B981', '#EF4444',
     ];
+
+    // Daily traffic chart (server-rendered data, no extra request needed)
+    new Chart(document.getElementById('trafficChart'), {
+        type: 'line',
+        data: {
+            labels: [{% for d in daily_views %}"{{ d.day }}"{{ ',' if not loop.last }}{% endfor %}],
+            datasets: [{
+                label: 'Page Views',
+                data: [{% for d in daily_views %}{{ d.cnt }}{{ ',' if not loop.last }}{% endfor %}],
+                borderColor: '#0EA5E9',
+                backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                fill: true,
+                tension: 0.35,
+                pointBackgroundColor: '#0EA5E9',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
 
     fetch('{{ url_for("sprint3_analytics.analytics_data") }}')
         .then(r => r.json())

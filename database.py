@@ -155,6 +155,19 @@ def init_db():
         )
     ''')
 
+    # — Page Views (lightweight built-in visit log for the admin dashboard) —
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS page_views (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            path TEXT NOT NULL,
+            user_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at)')
+
     # — Sprint 3 Tables —
 
     cursor.execute('''

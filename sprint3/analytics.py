@@ -17,6 +17,7 @@ analytics_bp = Blueprint('sprint3_analytics', __name__, template_folder='templat
 def analytics_dashboard():
     from models.wish_model import count_wishes
     from models.donation_model import count_campaigns
+    from models.pageview_model import count_pageviews, count_unique_visitors, get_top_pages, get_pageviews_per_day
 
     stats = {
         'total_listings': count_listings(),
@@ -25,9 +26,15 @@ def analytics_dashboard():
         'total_campaigns': count_campaigns(),
         'pending_reports': count_reports('pending'),
         'total_activities': count_activities(),
+        'total_pageviews': count_pageviews(),
+        'unique_visitors': count_unique_visitors(),
     }
 
-    return render_template('sprint3/analytics.html', stats=stats)
+    top_pages = get_top_pages(limit=8)
+    daily_views = list(reversed(get_pageviews_per_day(days=14)))
+
+    return render_template('sprint3/analytics.html', stats=stats,
+                            top_pages=top_pages, daily_views=daily_views)
 
 
 @analytics_bp.route('/admin/analytics/data')
