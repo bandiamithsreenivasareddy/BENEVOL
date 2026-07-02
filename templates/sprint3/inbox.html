@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+{% set msg_target_links = {
+    'listing': ('sprint1_listings.view_listing', 'listing_id'),
+    'wish': ('sprint1_wishes.view_wish', 'wish_id'),
+    'campaign': ('sprint1_donations.view_campaign', 'campaign_id')
+} %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="section-title mb-0">
+        <i class="bi bi-envelope me-2"></i>Messages
+    </h2>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'received' %}active{% endif %}" href="{{ url_for('sprint3_messages.inbox', tab='received') }}">
+            <i class="bi bi-inbox me-1"></i> Received
+            {% if received %}
+            {% set unread = received|selectattr('is_read', 'equalto', 0)|list|length %}
+            {% if unread > 0 %}
+            <span class="badge bg-danger ms-1">{{ unread }}</span>
+            {% endif %}
+            {% endif %}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if tab == 'sent' %}active{% endif %}" href="{{ url_for('sprint3_messages.inbox', tab='sent') }}">
+            <i class="bi bi-send me-1"></i> Sent
+            <span class="badge bg-secondary ms-1">{{ sent|length }}</span>
+        </a>
+    </li>
+</ul>
+
+<!-- Received Messages -->
+{% if tab == 'received' %}
+<div class="row g-3">
+    {% for msg in received %}
+    <div class="col-12">
+        <div class="card {% if not msg.is_read %}border-start border-primary border-4{% endif %}">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar-sm me-3 flex-shrink-0" style="width:40px;height:40px;">
+                                {{ msg.sender_name[0]|upper }}
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center mb-1">
+                                    <strong class="me-2">{{ msg.sender_name }}</strong>
+                                    {% if not msg.is_read %}
+                                    <span class="badge bg-primary">New</span>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-1">
+                                    <i class="bi bi-chat-quote text-primary me-1"></i>
+                                    "{{ msg.message_text }}"
+                                </p>
+                                <small class="text-muted">
+                                    <i class="bi bi-box-seam me-1"></i>
+                                    {% set ep, arg = msg_target_links.get(msg.target_type, msg_target_links['listing']) %}
+                                    Re: <a href="{{ url_for(ep, **{arg: msg.target_id}) }}" class="text-decoration-none">{{ msg.target_title or '(removed)' }}</a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        {% if msg.reply_text %}
+                        <div class="bg-success bg-opacity-10 rounded p-2 small">
+                            <i class="bi bi-reply-fill text-success me-1"></i>
+                            <strong>You replied:</strong><br>
+                            "{{ msg.reply_text }}"
+                        </div>
+                        {% else %}
+                        <!-- Reply Form -->
+                        <form action="{{ url_for('sprint3_messages.reply', message_id=msg.id) }}" method="POST">
+                            <select class="form-select form-select-sm mb-2" name="reply_text" required>
+                                <option value="">Pick a reply...</option>
+                                {% for reply in preset_replies %}
+                                <option value="{{ reply }}">{{ reply }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="bi bi-reply me-1"></i> Reply
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <small class="text-muted d-block">{{ msg.created_at }}</small>
+                        <a href="{{ url_for('sprint3_messages.read_message', message_id=msg.id) }}" class="btn btn-sm btn-outline-primary mt-1">
+                            <i class="bi bi-eye me-1"></i>View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not received %}
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted"></i>
+        <h4 class="text-muted mt-3">No messages yet</h4>
+        <p class="text-muted">When someone is interested in your listings, their messages will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Sent Messages -->
+{% if tab == 'sent' %}
+<div class="row g-3">
+    {% for msg in sent %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar-sm me-3 flex-shrink-0" style="width:40px;height:40px;background:var(--gradient-cool);color:white;">
+                                {{ msg.receiver_name[0]|upper }}
+                            </div>
+                            <div>
+                                <small class="text-muted mb-1 d-block">
+                                    To: <strong>{{ msg.receiver_name }}</strong>
+                                </small>
+                                <p class="mb-1">
+                                    <i class="bi bi-chat-quote text-primary me-1"></i>
+                                    "{{ msg.message_text }}"
+                                </p>
+                                <small class="text-muted">
+                                    <i class="bi bi-box-seam me-1"></i>
+                                    {% set ep, arg = msg_target_links.get(msg.target_type, msg_target_links['listing']) %}
+                                    Re: <a href="{{ url_for(ep, **{arg: msg.target_id}) }}" class="text-decoration-none">{{ msg.target_title or '(removed)' }}</a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        {% if msg.reply_text %}
+                        <div class="bg-info bg-opacity-10 rounded p-2 small">
+                            <i class="bi bi-reply-fill text-info me-1"></i>
+                            <strong>Owner replied:</strong><br>
+                            "{{ msg.reply_text }}"
+                        </div>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-hourglass-split me-1"></i>Awaiting reply
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <small class="text-muted d-block">{{ msg.created_at }}</small>
+                        <a href="{{ url_for('sprint3_messages.read_message', message_id=msg.id) }}" class="btn btn-sm btn-outline-primary mt-1">
+                            <i class="bi bi-eye me-1"></i>View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not sent %}
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-send display-1 text-muted"></i>
+        <h4 class="text-muted mt-3">No sent messages</h4>
+        <p class="text-muted">Browse listings and send a message to an owner to get started.</p>
+        <a href="{{ url_for('sprint1_listings.browse') }}" class="btn btn-primary">
+            <i class="bi bi-grid-3x3-gap me-1"></i> Browse Items
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

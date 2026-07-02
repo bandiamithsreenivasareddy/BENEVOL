@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Message Detail{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('sprint3_messages.inbox') }}" class="text-decoration-none">Messages</a></li>
+        <li class="breadcrumb-item active">Conversation</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <!-- Header -->
+            <div class="card-header bg-gradient-primary text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    {% set msg_target_links = {
+                        'listing': ('sprint1_listings.view_listing', 'listing_id'),
+                        'wish': ('sprint1_wishes.view_wish', 'wish_id'),
+                        'campaign': ('sprint1_donations.view_campaign', 'campaign_id')
+                    } %}
+                    {% set ep, arg = msg_target_links.get(msg.target_type, msg_target_links['listing']) %}
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-dots me-2"></i>Message about
+                        <a href="{{ url_for(ep, **{arg: msg.target_id}) }}" class="text-warning text-decoration-none">{{ msg.target_title or '(removed)' }}</a>
+                    </h5>
+                    <small class="opacity-75">{{ msg.created_at }}</small>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Sender's Message -->
+                <div class="d-flex mb-4">
+                    <div class="avatar-sm me-3 flex-shrink-0" style="width:45px;height:45px;font-size:1.1rem;">
+                        {{ msg.sender_name[0]|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between mb-1">
+                            <strong>{{ msg.sender_name }}</strong>
+                            <small class="text-muted">{{ msg.created_at }}</small>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-chat-quote me-1 text-primary"></i>
+                            "{{ msg.message_text }}"
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reply (if exists) -->
+                {% if msg.reply_text %}
+                <div class="d-flex mb-4 flex-row-reverse">
+                    <div class="avatar-sm ms-3 flex-shrink-0" style="width:45px;height:45px;font-size:1.1rem;background:var(--gradient-cool);color:white;">
+                        {{ msg.receiver_name[0]|upper }}
+                    </div>
+                    <div class="flex-grow-1 text-end">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">{{ msg.replied_at }}</small>
+                            <strong>{{ msg.receiver_name }}</strong>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3 text-start">
+                            <i class="bi bi-reply-fill me-1 text-success"></i>
+                            "{{ msg.reply_text }}"
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Reply Form (only if receiver hasn't replied yet and current user is receiver) -->
+                {% if not msg.reply_text and session.get('user_id') == msg.receiver_id %}
+                <hr>
+                <h6 class="fw-bold mb-3"><i class="bi bi-reply me-1"></i>Send a Reply</h6>
+                <form action="{{ url_for('sprint3_messages.reply', message_id=msg.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Choose a reply:</label>
+                        {% for reply in preset_replies %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="reply_text" id="reply{{ loop.index }}" value="{{ reply }}" required>
+                            <label class="form-check-label" for="reply{{ loop.index }}">
+                                {{ reply }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-reply me-1"></i> Send Reply
+                    </button>
+                </form>
+                {% elif not msg.reply_text %}
+                <div class="alert alert-warning py-2 mt-3">
+                    <i class="bi bi-hourglass-split me-1"></i> Awaiting reply from <strong>{{ msg.receiver_name }}</strong>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <a href="{{ url_for('sprint3_messages.inbox') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Messages
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
