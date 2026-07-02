@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 fade-in-up">
+                <h1 class="display-4 fw-bold mb-3">
+                    Share More,<br>Waste Less <i class="bi bi-recycle"></i>
+                </h1>
+                <p class="lead mb-4">
+                    Give away what you don't need, donate to causes that matter,
+                    and post a wish for what you do — one community, endless kindness.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{{ url_for('sprint1_listings.browse') }}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
+                        <i class="bi bi-search me-2"></i>Browse Items
+                    </a>
+                    {% if not session.get('user_id') %}
+                    <a href="{{ url_for('sprint1_auth.register') }}" class="btn btn-outline-light btn-lg px-4 fw-bold">
+                        <i class="bi bi-person-plus me-2"></i>Join Now
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('sprint1_listings.create') }}" class="btn btn-outline-light btn-lg px-4 fw-bold">
+                        <i class="bi bi-gift me-2"></i>Give Away
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-6 text-center d-none d-lg-block">
+                <div class="position-relative">
+                    <div style="font-size: 12rem; opacity: 0.15;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+
+                    <div class="position-absolute top-50 start-50 translate-middle">
+                        <div class="d-flex gap-4">
+                            <div class="text-center">
+                                <div class="hero-float-icon mb-2">
+                                    <i class="bi bi-gift-fill fs-2"></i>
+                                </div>
+                                <div class="fw-bold small">Give</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="hero-float-icon mb-2">
+                                    <i class="bi bi-heart-fill fs-2"></i>
+                                </div>
+                                <div class="fw-bold small">Donate</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="hero-float-icon mb-2">
+                                    <i class="bi bi-stars fs-2"></i>
+                                </div>
+                                <div class="fw-bold small">Wish</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Three core features -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-2">Three ways to make an impact</h2>
+        <p class="text-center text-muted mb-5">Give items, fund causes, or share a wish — all in one community.</p>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <a href="{{ url_for('sprint1_listings.browse') }}" class="step-card">
+                    <div class="card text-center p-4 h-100">
+                        <div class="icon-circle icon-circle-blue mx-auto mb-3">
+                            <i class="bi bi-gift-fill"></i>
+                        </div>
+                        <h5 class="fw-bold">Give Away</h5>
+                        <p class="text-muted mb-2">Share items you no longer need — free for someone who does.</p>
+                        <span class="small fw-semibold text-primary">Browse items <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="{{ url_for('sprint1_donations.donate') }}" class="step-card">
+                    <div class="card text-center p-4 h-100">
+                        <div class="icon-circle icon-circle-green mx-auto mb-3">
+                            <i class="bi bi-heart-fill"></i>
+                        </div>
+                        <h5 class="fw-bold">Donate</h5>
+                        <p class="text-muted mb-2">Support real causes and campaigns that need funding to make a difference.</p>
+                        <span class="small fw-semibold" style="color:var(--secondary);">See campaigns <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="{{ url_for('sprint1_wishes.wishes') }}" class="step-card">
+                    <div class="card text-center p-4 h-100">
+                        <div class="icon-circle mx-auto mb-3" style="background:linear-gradient(135deg,#7C3AED,#A855F7); box-shadow:0 4px 16px rgba(124,58,237,0.4);">
+                            <i class="bi bi-stars"></i>
+                        </div>
+                        <h5 class="fw-bold">Wishes</h5>
+                        <p class="text-muted mb-2">Post what you need and let the cuties help make it come true.</p>
+                        <span class="small fw-semibold" style="color:#A855F7;">Make a wish <i class="bi bi-arrow-right"></i></span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Listings -->
+<section class="py-5 section-alt">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0">Recent Listings</h2>
+            <a href="{{ url_for('sprint1_listings.browse') }}" class="btn btn-outline-primary btn-sm">
+                View All <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for listing in listings %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card listing-card clickable-card h-100 position-relative">
+
+                    {% if listing.image_path %}
+                    <img src="{{ url_for('static', filename=listing.image_path) }}" class="card-img-top" alt="{{ listing.title }}">
+                    {% else %}
+                    <div class="img-placeholder">
+                        <i class="bi bi-image"></i>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="category-badge">{{ listing.category }}</span>
+                            <span class="condition-badge badge bg-light text-dark">{{ listing.condition }}</span>
+                        </div>
+
+                        <h5 class="card-title">
+                            <a href="{{ url_for('sprint1_listings.view_listing', listing_id=listing.id) }}" class="stretched-link text-decoration-none" style="color:var(--dark);">{{ listing.title }}</a>
+                        </h5>
+                        <p class="card-text text-muted small">
+                            {{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <small class="text-muted">
+                                <i class="bi bi-geo-alt me-1"></i>{{ listing.city }}
+                            </small>
+                            <small class="text-muted"><i class="bi bi-person me-1"></i>{{ listing.owner_name }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not listings %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <h4 class="text-muted mt-3">No listings yet</h4>
+                <p class="text-muted">Be the first to share something!</p>
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('sprint1_listings.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Create Listing
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Active Campaigns -->
+{% if campaigns %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0"><i class="bi bi-heart-fill text-success me-2"></i>Active Campaigns</h2>
+            <a href="{{ url_for('sprint1_donations.donate') }}" class="btn btn-outline-primary btn-sm">View All <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        <div class="row g-4">
+            {% for c in campaigns %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card donation-card clickable-card h-100 position-relative">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="category-badge">{{ c.category }}</span>
+                            {% if c.campaign_type == 'benevol' %}<span class="badge rounded-pill" style="background:var(--gradient-orange);">Official</span>
+                            {% elif c.campaign_type == 'trust' %}<span class="badge rounded-pill bg-success">Trust</span>
+                            {% else %}<span class="badge rounded-pill bg-primary">Personal</span>{% endif %}
+                        </div>
+                        <h6 class="fw-bold mb-1">
+                            <a href="{{ url_for('sprint1_donations.view_campaign', campaign_id=c.id) }}" class="stretched-link text-decoration-none" style="color:var(--dark);">{{ c.title }}</a>
+                        </h6>
+                        <p class="text-muted small flex-grow-1">{{ c.purpose[:90] }}{% if c.purpose|length > 90 %}...{% endif %}</p>
+                        {% set pct = [(c.amount_raised / c.target_amount * 100), 100]|min if c.target_amount > 0 else 0 %}
+                        <div class="progress mb-2" style="height:6px; border-radius:3px;">
+                            <div class="progress-bar" style="width:{{ pct }}%; background:{{ 'var(--gradient-green)' if pct >= 75 else 'var(--gradient-primary)' }}"></div>
+                        </div>
+                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ c.city }} · ₹{{ "{:,.0f}".format(c.amount_raised) }} raised</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Community Wishes -->
+{% if wishes %}
+<section class="py-5 section-alt">
+    <div class="container">
+        {% set urgency_styles = {
+            'Urgent': 'background:rgba(239,68,68,0.12); color:#EF4444;',
+            'High':   'background:rgba(249,115,22,0.12); color:#F97316;',
+            'Normal': 'background:rgba(37,99,235,0.10); color:#2563EB;',
+            'Low':    'background:rgba(16,185,129,0.12); color:#10B981;'
+        } %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0"><i class="bi bi-stars me-2" style="color:#A855F7;"></i>Community Wishes</h2>
+            <a href="{{ url_for('sprint1_wishes.wishes') }}" class="btn btn-outline-primary btn-sm">View All <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        <div class="row g-4">
+            {% for w in wishes %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card wish-card clickable-card h-100 position-relative">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="category-badge">{{ w.category }}</span>
+                            <span class="badge rounded-pill" style="{{ urgency_styles.get(w.urgency, urgency_styles['Normal']) }} font-weight:700;">{{ w.urgency }}</span>
+                        </div>
+                        <h6 class="fw-bold mb-1">
+                            <a href="{{ url_for('sprint1_wishes.view_wish', wish_id=w.id) }}" class="stretched-link text-decoration-none" style="color:var(--dark);">{{ w.title }}</a>
+                        </h6>
+                        <p class="text-muted small flex-grow-1">{{ w.description[:90] }}{% if w.description|length > 90 %}...{% endif %}</p>
+                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ w.city }} · {{ w.username }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-4">Browse by Category</h2>
+
+        <div class="row g-3 justify-content-center">
+            {% set cat_icons = {
+                'Electronics': 'bi-laptop',
+                'Furniture': 'bi-house-door',
+                'Books': 'bi-book',
+                'Clothing': 'bi-bag',
+                'Sports': 'bi-bicycle',
+                'Kitchen': 'bi-cup-hot',
+                'Toys': 'bi-controller',
+                'Tools': 'bi-wrench',
+                'Garden': 'bi-flower1',
+                'Other': 'bi-three-dots'
+            } %}
+
+            {% for cat in categories %}
+            <div class="col-6 col-md-3 col-lg-2">
+                <a href="{{ url_for('sprint1_listings.browse', category=cat) }}" class="category-card text-center p-3 d-flex flex-column align-items-center h-100">
+                    <i class="bi {{ cat_icons.get(cat, 'bi-box') }} fs-2 text-primary mb-2"></i>
+                    <span class="fw-semibold small">{{ cat }}</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

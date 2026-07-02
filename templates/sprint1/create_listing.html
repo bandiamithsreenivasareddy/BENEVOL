@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Give Away an Item{% endblock %}
+{% block main_class %}page-bg-form{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:780px;">
+
+    <form method="POST" action="{{ url_for('sprint1_listings.create') }}" enctype="multipart/form-data" id="listingForm">
+        <div class="form-card">
+
+            <!-- Banner Header -->
+            <div class="form-banner">
+                <div class="fb-icon"><i class="bi bi-gift-fill"></i></div>
+                <div>
+                    <h4>Give Away an Item</h4>
+                    <p>One person's clutter is another's treasure — it takes under 2 minutes.</p>
+                </div>
+            </div>
+
+            <!-- Block 1: Basics -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-blue"><i class="bi bi-info-lg"></i></span>Basics</div>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold small">ITEM TITLE <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" name="title"
+                               value="{{ title|default('') }}" required minlength="3"
+                               placeholder="e.g., Wooden Bookshelf, Kids Bicycle, Winter Jacket...">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold small">CONDITION <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-lg" name="condition">
+                            {% for cond in conditions %}
+                            <option value="{{ cond }}" {% if condition|default('Good') == cond %}selected{% endif %}>{{ cond }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 2: Category -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-purple"><i class="bi bi-grid-fill"></i></span>Category <span class="text-danger">*</span></div>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for cat in categories %}
+                    <div class="cat-tile">
+                        <input type="radio" name="category" id="cat_{{ loop.index }}" value="{{ cat }}"
+                               {% if category|default('') == cat %}checked{% endif %} required>
+                        <label for="cat_{{ loop.index }}">{{ cat }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Block 3: Description -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-green"><i class="bi bi-text-paragraph"></i></span>Description <span class="text-danger">*</span></div>
+                <textarea class="form-control" name="description" rows="4" required
+                          placeholder="Describe the item — its size, age, any defects, what's included. The more honest detail you give, the faster someone will claim it.">{{ description|default('') }}</textarea>
+            </div>
+
+            <!-- Block 4: Location -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-orange"><i class="bi bi-geo-alt-fill"></i></span>Pickup Location</div>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold small">CITY <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="city"
+                               list="city-options" autocomplete="off" required
+                               placeholder="Type to search city..."
+                               value="{{ city|default('') }}">
+                        <datalist id="city-options">
+                            {% for c in ['Ahmedabad','Bengaluru','Bhopal','Bhubaneswar','Chandigarh','Chennai','Coimbatore','Delhi','Faridabad','Ghaziabad','Goa','Gurugram','Guwahati','Hyderabad','Indore','Jaipur','Kanpur','Kochi','Kolkata','Lucknow','Ludhiana','Madurai','Mumbai','Mysuru','Nagpur','Nashik','Noida','Patna','Pune','Raipur','Rajkot','Ranchi','Surat','Thiruvananthapuram','Vadodara','Varanasi','Vijayawada','Visakhapatnam'] %}<option value="{{ c }}">{% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="col-md-7">
+                        <label class="form-label fw-semibold small">AREA / LANDMARK</label>
+                        <input type="text" class="form-control" name="location"
+                               value="{{ location|default('') }}"
+                               placeholder="e.g., Bandra West, near Carter Road">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold small">CONTACT NUMBER</label>
+                        <input type="tel" class="form-control" name="contact_number"
+                               value="{{ contact_number|default('') }}"
+                               placeholder="e.g., 9876543210">
+                        <div class="form-text">Only visible to logged-in users.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 5: Photo -->
+            <div class="form-group-block">
+                <div class="form-group-label"><span class="fg-icon fg-pink"><i class="bi bi-camera-fill"></i></span>Photo <span class="text-muted fw-normal" style="text-transform:none; letter-spacing:0; font-size:0.8rem;">(optional but recommended)</span></div>
+                <div class="upload-drop-zone" id="uploadZone" onclick="document.getElementById('imageInput').click()">
+                    <i class="bi bi-cloud-upload" style="font-size:2.5rem; color:var(--primary); opacity:0.5;"></i>
+                    <p class="fw-semibold mt-2 mb-1" style="color:var(--dark);">Click or drag & drop a photo</p>
+                    <p class="text-muted small mb-0">JPG, PNG, WebP · Max 5MB</p>
+                </div>
+                <input type="file" id="imageInput" name="image" accept="image/*" class="d-none">
+                <img id="imagePreview" class="mt-3 rounded-3 w-100" style="display:none; max-height:280px; object-fit:cover;">
+            </div>
+
+            <!-- Footer actions -->
+            <div class="form-card-footer">
+                <a href="{{ url_for('sprint1_listings.browse') }}" class="btn btn-outline-secondary px-4 d-inline-flex align-items-center" style="border-radius:10px; height:46px;">Cancel</a>
+                <button type="submit" class="btn btn-primary px-5 fw-semibold" style="border-radius:10px; height:46px;">
+                    <i class="bi bi-check-circle me-2"></i>Post Listing
+                </button>
+            </div>
+
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const imageInput = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+const uploadZone = document.getElementById('uploadZone');
+
+imageInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        imagePreview.src = e.target.result;
+        imagePreview.style.display = 'block';
+        uploadZone.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+
+['dragover','dragleave','drop'].forEach(evt => {
+    uploadZone.addEventListener(evt, function(e) {
+        e.preventDefault();
+        uploadZone.classList.toggle('active', evt === 'dragover');
+        if (evt === 'drop' && e.dataTransfer.files.length) {
+            imageInput.files = e.dataTransfer.files;
+            imageInput.dispatchEvent(new Event('change'));
+        }
+    });
+});
+</script>
+{% endblock %}

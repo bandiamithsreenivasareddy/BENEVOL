@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Give Away{% endblock %}
+{% block main_class %}{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="give-hero py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7 fade-in-up">
+                <h1 class="fw-bold display-5 mb-3">
+                    Give &amp; Take <i class="bi bi-gift-fill text-warning"></i>
+                </h1>
+                <p class="lead mb-2 opacity-90 fw-semibold">
+                    Free items shared by your community.
+                </p>
+                <p class="mb-4 opacity-75">
+                    Give away what you no longer need and find what someone else is sharing —
+                    no money, just kindness passed forward.
+                </p>
+                {% if session.get('user_id') %}
+                <a href="{{ url_for('sprint1_listings.create') }}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
+                    <i class="bi bi-plus-circle me-2"></i>Give Away an Item
+                </a>
+                {% else %}
+                <a href="{{ url_for('sprint1_auth.login') }}" class="btn btn-warning btn-lg px-4 fw-bold shadow">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Login to Give Away
+                </a>
+                {% endif %}
+            </div>
+            <div class="col-lg-5 d-none d-lg-flex justify-content-center gap-4 text-white text-center">
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-gift fs-2"></i></div>
+                    <div class="fw-semibold small">Give</div>
+                </div>
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-search-heart fs-2"></i></div>
+                    <div class="fw-semibold small">Find</div>
+                </div>
+                <div>
+                    <div class="hero-float-icon mb-2"><i class="bi bi-people-fill fs-2"></i></div>
+                    <div class="fw-semibold small">Connect</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filters + Items -->
+<section class="py-5">
+    <div class="container">
+
+        {% if search %}
+        <div class="mb-3">
+            <span class="text-muted small">Showing results for</span>
+            <span class="badge rounded-pill px-3 py-2 ms-1" style="background:rgba(37,99,235,0.1);color:var(--primary);font-size:0.82rem;">"{{ search }}"
+                <a href="{{ url_for('sprint1_listings.browse', category=category, city=city, sort=sort) }}" class="text-decoration-none ms-1" style="color:var(--primary);">&times;</a>
+            </span>
+        </div>
+        {% endif %}
+
+        <!-- Category pills -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <a href="{{ url_for('sprint1_listings.browse', search=search, city=city, sort=sort) }}"
+               class="btn btn-sm rounded-pill {{ 'btn-primary' if not category else 'btn-outline-secondary' }}">All</a>
+            {% for cat in all_categories %}
+            <a href="{{ url_for('sprint1_listings.browse', category=cat, search=search, city=city, sort=sort) }}"
+               class="btn btn-sm rounded-pill {{ 'btn-primary' if category == cat else 'btn-outline-secondary' }}">{{ cat }}</a>
+            {% endfor %}
+        </div>
+
+        <!-- Sort + City + count -->
+        <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
+            <small class="text-muted fw-semibold me-1">SORT:</small>
+            <a href="{{ url_for('sprint1_listings.browse', sort='newest', category=category, city=city, search=search) }}"
+               class="btn btn-sm rounded-pill {{ 'btn-dark' if sort != 'oldest' else 'btn-outline-secondary' }}">Newest</a>
+            <a href="{{ url_for('sprint1_listings.browse', sort='oldest', category=category, city=city, search=search) }}"
+               class="btn btn-sm rounded-pill {{ 'btn-dark' if sort == 'oldest' else 'btn-outline-secondary' }}">Oldest</a>
+
+            <form method="GET" action="{{ url_for('sprint1_listings.browse') }}" class="d-inline-flex align-items-center ms-2">
+                <input type="hidden" name="category" value="{{ category }}">
+                <input type="hidden" name="sort" value="{{ sort }}">
+                <input type="hidden" name="search" value="{{ search }}">
+                <select name="city" class="form-select form-select-sm rounded-pill" style="width:auto; border:1.5px solid var(--border);" onchange="this.form.submit()">
+                    <option value="">All Cities</option>
+                    {% for c in cities %}
+                    <option value="{{ c }}" {% if city == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            <div class="ms-auto">
+                <span class="text-muted small">{{ total }} item{{ 's' if total != 1 else '' }}</span>
+            </div>
+        </div>
+
+        <!-- Item Cards -->
+        <div class="row g-4">
+            {% for listing in listings %}
+            <div class="col-sm-6 col-lg-4">
+                <div class="card give-card clickable-card h-100 position-relative">
+                    <div class="img-wrapper" style="overflow:hidden; position:relative; border-radius:14px 14px 0 0;">
+                        {% if listing.image_path %}
+                        <img src="{{ url_for('static', filename=listing.image_path) }}" class="card-img-top" alt="{{ listing.title }}" style="height:185px; object-fit:cover; transition:transform 0.4s ease;">
+                        {% else %}
+                        <div class="give-img-placeholder"><i class="bi bi-box-seam"></i></div>
+                        {% endif %}
+                        <span style="position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.92); backdrop-filter:blur(4px); border-radius:20px; padding:0.15rem 0.6rem; font-size:0.72rem; font-weight:600; color:#374151;">{{ listing.condition }}</span>
+                    </div>
+                    <div class="card-body d-flex flex-column" style="padding:1.1rem;">
+                        <span class="category-badge d-inline-block mb-2">{{ listing.category }}</span>
+                        <h6 class="fw-bold mb-1">
+                            <a href="{{ url_for('sprint1_listings.view_listing', listing_id=listing.id) }}" class="stretched-link text-decoration-none" style="color:var(--dark);">{{ listing.title }}</a>
+                        </h6>
+                        <p class="text-muted small flex-grow-1" style="line-height:1.4;">
+                            {{ listing.description[:80] }}{% if listing.description|length > 80 %}...{% endif %}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <div class="small fw-semibold" style="color:var(--dark); font-size:0.8rem;"><i class="bi bi-geo-alt text-primary me-1"></i>{{ listing.city }}</div>
+                            <div class="small text-muted" style="font-size:0.75rem;"><i class="bi bi-person me-1"></i>{{ listing.owner_name }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-box-seam display-1 text-muted"></i>
+                <h5 class="text-muted mt-3">No items found</h5>
+                <p class="text-muted">Try adjusting the filters{% if search %} or search{% endif %}.</p>
+                <a href="{{ url_for('sprint1_listings.browse') }}" class="btn btn-outline-primary" style="border-radius:10px;"><i class="bi bi-arrow-counterclockwise me-2"></i>Reset</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center gap-1">
+                <li class="page-item {% if page<=1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('sprint1_listings.browse', page=page-1, search=search, category=category, city=city, sort=sort) }}" style="border-radius:8px;"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                {% for p in range(1, total_pages+1) %}
+                {% if p==page or p==1 or p==total_pages or (p>=page-2 and p<=page+2) %}
+                <li class="page-item {% if p==page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('sprint1_listings.browse', page=p, search=search, category=category, city=city, sort=sort) }}" style="border-radius:8px;">{{ p }}</a>
+                </li>
+                {% elif p==page-3 or p==page+3 %}
+                <li class="page-item disabled"><span class="page-link" style="border-radius:8px;">…</span></li>
+                {% endif %}
+                {% endfor %}
+                <li class="page-item {% if page>=total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('sprint1_listings.browse', page=page+1, search=search, category=category, city=city, sort=sort) }}" style="border-radius:8px;"><i class="bi bi-chevron-right"></i></a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.give-hero {
+    background: linear-gradient(135deg, #0EA5E9 0%, #2563EB 50%, #10B981 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+.give-hero::before {
+    content: '';
+    position: absolute; top: -40%; right: -15%;
+    width: 55%; height: 200%;
+    background: rgba(255,255,255,0.05);
+    transform: rotate(12deg); border-radius: 50%;
+}
+.give-img-placeholder {
+    height: 185px;
+    background: linear-gradient(135deg, var(--surface-alt) 0%, var(--border) 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary); font-size: 3rem;
+}
+.give-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.give-card:hover { transform: translateY(-5px); }
+</style>
+{% endblock %}

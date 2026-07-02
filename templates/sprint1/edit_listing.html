@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Edit Listing{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-gradient-primary text-white py-3">
+                <h4 class="mb-0"><i class="bi bi-pencil me-2"></i>Edit Listing</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('sprint1_listings.edit', listing_id=listing.id) }}" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="title" class="form-label fw-semibold">Item Title *</label>
+                            <input type="text" class="form-control" id="title" name="title"
+                                   value="{{ listing.title }}" required minlength="3">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="condition" class="form-label fw-semibold">Condition</label>
+                            <select class="form-select" id="condition" name="condition">
+                                {% for cond in conditions %}
+                                <option value="{{ cond }}" {% if listing.condition == cond %}selected{% endif %}>{{ cond }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required>{{ listing.description }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label fw-semibold">Category *</label>
+                            <select class="form-select" id="category" name="category" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {% if listing.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label fw-semibold">City *</label>
+                            <input type="text" class="form-control" id="city" name="city"
+                                   list="city-options" autocomplete="off" required
+                                   placeholder="Type to search city..."
+                                   value="{{ listing.city }}">
+                            <datalist id="city-options">
+                                {% for c in ['Ahmedabad','Bengaluru','Bhopal','Bhubaneswar','Chandigarh','Chennai','Coimbatore','Delhi','Faridabad','Ghaziabad','Goa','Gurugram','Guwahati','Hyderabad','Indore','Jaipur','Kanpur','Kochi','Kolkata','Lucknow','Ludhiana','Madurai','Mumbai','Mysuru','Nagpur','Nashik','Noida','Patna','Pune','Raipur','Rajkot','Ranchi','Surat','Thiruvananthapuram','Vadodara','Varanasi','Vijayawada','Visakhapatnam'] %}
+                                <option value="{{ c }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="location" class="form-label fw-semibold">
+                            <i class="bi bi-pin-map me-1"></i>Exact Location / Area
+                        </label>
+                        <input type="text" class="form-control" id="location" name="location"
+                               value="{{ listing.location }}" placeholder="e.g., Bandra West, near Carter Road">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contact_number" class="form-label fw-semibold">
+                            <i class="bi bi-telephone me-1"></i>Contact Number
+                        </label>
+                        <input type="tel" class="form-control" id="contact_number" name="contact_number"
+                               value="{{ listing.contact_number }}" placeholder="e.g., 9876543210">
+                    </div>
+
+                    {% if listing.image_path %}
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Current Image</label>
+                        <br>
+                        <img src="{{ url_for('static', filename=listing.image_path) }}" class="rounded" style="max-height: 150px;">
+                    </div>
+                    {% endif %}
+
+                    <label for="imageInput" class="form-label fw-semibold">New Photo (optional)</label>
+                    <input type="file" class="form-control" id="imageInput" name="image" accept="image/*">
+                    <img id="imagePreview" class="mt-2 rounded" style="display:none; max-height: 200px;">
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>Save Changes
+                        </button>
+
+                        <a href="{{ url_for('sprint1_listings.view_listing', listing_id=listing.id) }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

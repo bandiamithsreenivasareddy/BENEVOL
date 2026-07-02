@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard{% endblock %}
+
+{% set urgency_styles = {
+    'Urgent': 'background:rgba(239,68,68,0.12); color:#EF4444;',
+    'High':   'background:rgba(249,115,22,0.12); color:#F97316;',
+    'Normal': 'background:rgba(37,99,235,0.10); color:#2563EB;',
+    'Low':    'background:rgba(16,185,129,0.12); color:#10B981;'
+} %}
+
+{% block content %}
+<h2 class="section-title mb-4">
+    <i class="bi bi-speedometer2 me-2"></i>My Dashboard
+    {% if is_admin %}<span class="badge ms-2" style="background:var(--gradient-orange); font-size:0.6rem; vertical-align:middle;">ADMIN</span>{% endif %}
+</h2>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl">
+        <div class="stat-card bg-gradient-purple">
+            <i class="bi bi-box-seam stat-icon"></i>
+            <h3>{{ total }}</h3>
+            <p>My Listings</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+        <div class="stat-card" style="background:linear-gradient(135deg,#7C3AED,#A855F7);">
+            <i class="bi bi-stars stat-icon"></i>
+            <h3>{{ wishes|length }}</h3>
+            <p>My Wishes</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+        <div class="stat-card bg-gradient-green">
+            <i class="bi bi-heart-fill stat-icon"></i>
+            <h3>{{ campaigns|length }}</h3>
+            <p>My Campaigns</p>
+        </div>
+    </div>
+    {% if config.SPRINT2 %}
+    <div class="col-6 col-md-4 col-xl">
+        <div class="stat-card bg-gradient-red">
+            <i class="bi bi-bookmark-heart stat-icon"></i>
+            <h3>{{ bookmark_count|default(0) }}</h3>
+            <p>Saved Items</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+        <div class="stat-card bg-gradient-blue">
+            <i class="bi bi-star stat-icon"></i>
+            <h3>{{ avg_rating|default('N/A') }}</h3>
+            <p>Avg Rating</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- My Listings -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-box-seam me-2 text-primary"></i>My Listings</h5>
+        <a href="{{ url_for('sprint1_listings.create') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i> New Listing
+        </a>
+    </div>
+    <div class="card-body">
+        {% if listings %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr><th>Item</th><th>Category</th><th>City</th><th>Date</th><th class="text-end">Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for listing in listings %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if listing.image_path %}
+                                <img src="{{ url_for('static', filename=listing.image_path) }}" class="rounded me-3" width="46" height="46" style="object-fit: cover;">
+                                {% else %}
+                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width:46px;height:46px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                                {% endif %}
+                                <a href="{{ url_for('sprint1_listings.view_listing', listing_id=listing.id) }}" class="fw-semibold text-decoration-none">{{ listing.title }}</a>
+                            </div>
+                        </td>
+                        <td><span class="category-badge">{{ listing.category }}</span></td>
+                        <td><i class="bi bi-geo-alt me-1"></i>{{ listing.city }}</td>
+                        <td><small class="text-muted">{{ listing.created_at[:10] }}</small></td>
+                        <td class="text-end">
+                            <a href="{{ url_for('sprint1_listings.edit', listing_id=listing.id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <form action="{{ url_for('sprint1_listings.delete', listing_id=listing.id) }}" method="POST" class="d-inline delete-form">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-box-seam display-5 text-muted"></i>
+            <p class="text-muted mt-2 mb-2">No listings yet</p>
+            <a href="{{ url_for('sprint1_listings.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i> Create one</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- My Wishes -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-stars me-2" style="color:#A855F7;"></i>My Wishes</h5>
+        <a href="{{ url_for('sprint1_wishes.create') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-stars me-1"></i> Make a Wish
+        </a>
+    </div>
+    <div class="card-body">
+        {% if wishes %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr><th>Wish</th><th>Category</th><th>Priority</th><th>Status</th><th class="text-end">Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for w in wishes %}
+                    <tr>
+                        <td><a href="{{ url_for('sprint1_wishes.view_wish', wish_id=w.id) }}" class="fw-semibold text-decoration-none">{{ w.title }}</a>
+                            <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ w.city }}</div></td>
+                        <td><span class="category-badge">{{ w.category }}</span></td>
+                        <td><span class="badge rounded-pill" style="{{ urgency_styles.get(w.urgency, urgency_styles['Normal']) }} font-weight:700;">{{ w.urgency }}</span></td>
+                        <td>
+                            {% if w.status == 'fulfilled' %}<span class="badge bg-success">Fulfilled</span>
+                            {% else %}<span class="badge bg-secondary">Active</span>{% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('sprint1_wishes.view_wish', wish_id=w.id) }}" class="btn btn-sm btn-outline-primary me-1" title="View"><i class="bi bi-eye"></i></a>
+                            {% if w.status == 'active' %}
+                            <form action="{{ url_for('sprint1_wishes.fulfill', wish_id=w.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Mark this wish as fulfilled?');">
+                                <button type="submit" class="btn btn-sm btn-outline-success me-1" title="Mark fulfilled"><i class="bi bi-check-circle"></i></button>
+                            </form>
+                            {% endif %}
+                            <form action="{{ url_for('sprint1_wishes.delete', wish_id=w.id) }}" method="POST" class="d-inline delete-form">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-stars display-5 text-muted"></i>
+            <p class="text-muted mt-2 mb-2">You haven't made any wishes yet</p>
+            <a href="{{ url_for('sprint1_wishes.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-stars me-1"></i> Make a Wish</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- My Campaigns -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-heart-fill me-2 text-success"></i>My Campaigns</h5>
+        <a href="{{ url_for('sprint1_donations.create_donation') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i> Start a Campaign
+        </a>
+    </div>
+    <div class="card-body">
+        {% if campaigns %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr><th>Campaign</th><th>Category</th><th>Raised / Goal</th><th>Status</th><th class="text-end">Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for c in campaigns %}
+                    <tr>
+                        <td><a href="{{ url_for('sprint1_donations.view_campaign', campaign_id=c.id) }}" class="fw-semibold text-decoration-none">{{ c.title }}</a>
+                            <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ c.city }}</div></td>
+                        <td><span class="category-badge">{{ c.category }}</span></td>
+                        <td><small>₹{{ "{:,.0f}".format(c.amount_raised) }} / ₹{{ "{:,.0f}".format(c.target_amount) }}</small></td>
+                        <td><span class="badge {{ 'bg-success' if c.status=='funded' else 'bg-secondary' }}">{{ c.status|capitalize }}</span></td>
+                        <td class="text-end">
+                            <a href="{{ url_for('sprint1_donations.view_campaign', campaign_id=c.id) }}" class="btn btn-sm btn-outline-primary me-1" title="View"><i class="bi bi-eye"></i></a>
+                            <form action="{{ url_for('sprint1_donations.delete_donation', campaign_id=c.id) }}" method="POST" class="d-inline delete-form">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-heart display-5 text-muted"></i>
+            <p class="text-muted mt-2 mb-2">You haven't started any campaigns yet</p>
+            <a href="{{ url_for('sprint1_donations.create_donation') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i> Start a Campaign</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if is_admin %}
+<!-- ============ ADMIN PLATFORM MANAGEMENT ============ -->
+<div class="mt-5 mb-3 d-flex align-items-center gap-2">
+    <h4 class="fw-bold mb-0" style="color:var(--dark);"><i class="bi bi-shield-lock-fill me-2 text-warning"></i>Platform Management</h4>
+    <span class="badge" style="background:var(--gradient-orange);">ADMIN ONLY</span>
+</div>
+
+<!-- Admin quick links -->
+<div class="row g-3 mb-4">
+    {% if config.SPRINT3 %}
+    <div class="col-md-4"><a href="{{ url_for('sprint3_analytics.analytics_dashboard') }}" class="btn btn-outline-primary w-100 py-2"><i class="bi bi-graph-up me-2"></i>Analytics</a></div>
+    {% endif %}
+    {% if config.SPRINT2 %}
+    <div class="col-md-4"><a href="{{ url_for('sprint2_reports.admin_reports') }}" class="btn btn-outline-primary w-100 py-2"><i class="bi bi-flag me-2"></i>Reports</a></div>
+    <div class="col-md-4"><a href="{{ url_for('sprint2_activity.all_activity') }}" class="btn btn-outline-primary w-100 py-2"><i class="bi bi-activity me-2"></i>Activity Logs</a></div>
+    {% endif %}
+</div>
+
+<ul class="nav nav-tabs mb-3" id="adminTabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-listings" type="button">All Listings <span class="badge bg-secondary">{{ all_listings|length }}</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-wishes" type="button">All Wishes <span class="badge bg-secondary">{{ all_wishes|length }}</span></button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-campaigns" type="button">All Campaigns <span class="badge bg-secondary">{{ all_campaigns|length }}</span></button></li>
+</ul>
+
+<div class="tab-content card shadow-sm">
+    <!-- All Listings -->
+    <div class="tab-pane fade show active p-3" id="tab-listings">
+        <div class="table-responsive" style="max-height:420px; overflow:auto;">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Item</th><th>Owner</th><th>Category</th><th>City</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                    {% for l in all_listings %}
+                    <tr>
+                        <td><a href="{{ url_for('sprint1_listings.view_listing', listing_id=l.id) }}" class="fw-semibold text-decoration-none">{{ l.title }}</a></td>
+                        <td><small class="text-muted">{{ l.owner_name|default(l.owner_id) }}</small></td>
+                        <td><span class="category-badge">{{ l.category }}</span></td>
+                        <td><small>{{ l.city }}</small></td>
+                        <td class="text-end">
+                            <a href="{{ url_for('sprint1_listings.edit', listing_id=l.id) }}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                            <form action="{{ url_for('sprint1_listings.delete', listing_id=l.id) }}" method="POST" class="d-inline delete-form">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}<tr><td colspan="5" class="text-center text-muted py-3">No listings.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- All Wishes -->
+    <div class="tab-pane fade p-3" id="tab-wishes">
+        <div class="table-responsive" style="max-height:420px; overflow:auto;">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Wish</th><th>By</th><th>Priority</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                    {% for w in all_wishes %}
+                    <tr>
+                        <td><a href="{{ url_for('sprint1_wishes.view_wish', wish_id=w.id) }}" class="fw-semibold text-decoration-none">{{ w.title }}</a>
+                            <div class="small text-muted">{{ w.category }} · {{ w.city }}</div></td>
+                        <td><small class="text-muted">{{ w.username }}</small></td>
+                        <td><span class="badge rounded-pill" style="{{ urgency_styles.get(w.urgency, urgency_styles['Normal']) }} font-weight:700;">{{ w.urgency }}</span></td>
+                        <td>{% if w.status == 'fulfilled' %}<span class="badge bg-success">Fulfilled</span>{% else %}<span class="badge bg-secondary">{{ w.status|capitalize }}</span>{% endif %}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('sprint1_wishes.view_wish', wish_id=w.id) }}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i></a>
+                            <form action="{{ url_for('sprint1_wishes.delete', wish_id=w.id) }}" method="POST" class="d-inline delete-form">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}<tr><td colspan="5" class="text-center text-muted py-3">No wishes.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- All Campaigns -->
+    <div class="tab-pane fade p-3" id="tab-campaigns">
+        <div class="table-responsive" style="max-height:420px; overflow:auto;">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Campaign</th><th>By</th><th>Type</th><th>Raised / Goal</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                    {% for c in all_campaigns %}
+                    <tr>
+                        <td><a href="{{ url_for('sprint1_donations.view_campaign', campaign_id=c.id) }}" class="fw-semibold text-decoration-none">{{ c.title }}</a>
+                            <div class="small text-muted">{{ c.category }} · {{ c.city }}</div></td>
+                        <td><small class="text-muted">{{ c.username }}</small></td>
+                        <td>
+                            {% if c.campaign_type == 'benevol' %}<span class="badge" style="background:var(--gradient-orange);">BENEVOL</span>
+                            {% elif c.campaign_type == 'trust' %}<span class="badge bg-success">Trust</span>
+                            {% else %}<span class="badge bg-primary">Personal</span>{% endif %}
+                        </td>
+                        <td><small>₹{{ "{:,.0f}".format(c.amount_raised) }} / ₹{{ "{:,.0f}".format(c.target_amount) }}</small></td>
+                        <td class="text-end">
+                            <a href="{{ url_for('sprint1_donations.view_campaign', campaign_id=c.id) }}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i></a>
+                            <form action="{{ url_for('sprint1_donations.delete_donation', campaign_id=c.id) }}" method="POST" class="d-inline delete-form">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}<tr><td colspan="5" class="text-center text-muted py-3">No campaigns.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
