@@ -41,8 +41,8 @@ def get_wishes(category='', city='', urgency='', page=1, per_page=9):
 
     where = " AND ".join(where_clauses)
 
-    cursor.execute(f"SELECT COUNT(*) FROM wishes w WHERE {where}", params)
-    total = cursor.fetchone()[0]
+    cursor.execute(f"SELECT COUNT(*) as cnt FROM wishes w WHERE {where}", params)
+    total = cursor.fetchone()['cnt']
 
     offset = (page - 1) * per_page
     cursor.execute(f'''
@@ -137,7 +137,7 @@ def delete_wish(wish_id):
 def count_wishes():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT COUNT(*) FROM wishes WHERE status = 'active'")
-    n = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) as cnt FROM wishes WHERE status = 'active'")
+    n = cursor.fetchone()['cnt']
     close_db(db)
     return n

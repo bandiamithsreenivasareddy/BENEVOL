@@ -19,7 +19,7 @@
                 {{ user.role|upper }}
             </span>
 
-            <p class="small text-muted">Member since {{ user.created_at }}</p>
+            <p class="small text-muted">Member since {{ user.created_at|shortdate }}</p>
 
             {% if config.SPRINT2 %}
             <div class="bg-light rounded-3 p-3 mb-3">

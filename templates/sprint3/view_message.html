@@ -25,7 +25,7 @@
                         <i class="bi bi-chat-dots me-2"></i>Message about
                         <a href="{{ url_for(ep, **{arg: msg.target_id}) }}" class="text-warning text-decoration-none">{{ msg.target_title or '(removed)' }}</a>
                     </h5>
-                    <small class="opacity-75">{{ msg.created_at }}</small>
+                    <small class="opacity-75">{{ msg.created_at|shortdatetime }}</small>
                 </div>
             </div>
 
@@ -38,7 +38,7 @@
                     <div class="flex-grow-1">
                         <div class="d-flex justify-content-between mb-1">
                             <strong>{{ msg.sender_name }}</strong>
-                            <small class="text-muted">{{ msg.created_at }}</small>
+                            <small class="text-muted">{{ msg.created_at|shortdatetime }}</small>
                         </div>
                         <div class="bg-primary bg-opacity-10 rounded-3 p-3">
                             <i class="bi bi-chat-quote me-1 text-primary"></i>
@@ -55,7 +55,7 @@
                     </div>
                     <div class="flex-grow-1 text-end">
                         <div class="d-flex justify-content-between mb-1">
-                            <small class="text-muted">{{ msg.replied_at }}</small>
+                            <small class="text-muted">{{ msg.replied_at|shortdatetime }}</small>
                             <strong>{{ msg.receiver_name }}</strong>
                         </div>
                         <div class="bg-success bg-opacity-10 rounded-3 p-3 text-start">

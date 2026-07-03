@@ -36,6 +36,26 @@ def create_app():
         safe_text = str(escape(value))
         return Markup(safe_text.replace('\n', '<br>'))
 
+    @app.template_filter('shortdate')
+    def shortdate(value):
+        """Format a timestamp as YYYY-MM-DD. SQLite returns timestamps as
+        plain strings; PostgreSQL returns real datetime objects - this
+        handles both so templates don't care which engine is active."""
+        if not value:
+            return ''
+        if hasattr(value, 'strftime'):
+            return value.strftime('%Y-%m-%d')
+        return str(value)[:10]
+
+    @app.template_filter('shortdatetime')
+    def shortdatetime(value):
+        """Same as shortdate but keeps hours:minutes, for message/activity feeds."""
+        if not value:
+            return ''
+        if hasattr(value, 'strftime'):
+            return value.strftime('%Y-%m-%d %H:%M')
+        return str(value)[:16]
+
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
     sprint1, sprint2, sprint3 = resolve_flags()    #change later

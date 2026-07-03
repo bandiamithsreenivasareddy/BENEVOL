@@ -23,9 +23,27 @@ The feature set is organized into three toggleable "sprints" (see `feature_flags
 ## Tech Stack
 
 - **Backend:** Flask 3, Python 3.12
-- **Database:** SQLite3 (raw SQL, parameterized queries — no ORM)
+- **Database:** SQLite (local dev) or PostgreSQL (production) — raw SQL, parameterized queries, no ORM
 - **Frontend:** Jinja2, Bootstrap 5, vanilla JS, Bootstrap Icons
 - **Auth:** Werkzeug password hashing + Flask sessions
+
+## Database: SQLite locally, PostgreSQL in production
+
+By default the app uses a local SQLite file (`daanloop.db`) — zero setup, just run it.
+Free hosting's disk is usually **ephemeral** (wiped on every restart/redeploy), so
+production should point at a real persistent database instead. Set one env var to
+switch:
+
+| Env var | What it does |
+|---|---|
+| `DATABASE_URL` | If set (e.g. `postgresql://user:pass@host:5432/dbname`), the app uses PostgreSQL instead of SQLite. Leave unset for local dev. |
+
+Free PostgreSQL hosting that works well here: [Supabase](https://supabase.com) or
+[Neon](https://neon.tech) — both give a permanent free-tier database and a ready-to-use
+connection string for `DATABASE_URL`.
+
+The same `database.py` module supports both engines behind one interface (see the
+module docstring for how) — no model code needs to know which one is active.
 
 ## Getting Started
 

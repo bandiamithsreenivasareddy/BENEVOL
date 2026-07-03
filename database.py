@@ -1,20 +1,115 @@
 """
-DAANLOOP Database Module
+BENEVOL Database Module
 ========================
 
-Handles SQLite3 connection and schema initialization.
+Supports two engines behind one interface:
+- SQLite (default) - zero setup, used for local development.
+- PostgreSQL - used in production when DATABASE_URL is set (e.g. Supabase,
+  Neon, Render Postgres). SQLite's free-tier host disk is ephemeral, so
+  production needs a real persistent database.
+
+Every model file was written against sqlite3's API ('?' placeholders,
+dict-style row access via sqlite3.Row, cursor.lastrowid after INSERT).
+Rather than rewriting ~30 queries across 10 files, get_db() returns a thin
+wrapper that makes a psycopg2 (PostgreSQL) connection behave the same way,
+so no model code needs to know which engine is active.
 """
 
 import sqlite3
 from config import Config
 
+IS_POSTGRES = bool(Config.DATABASE_URL)
+
+if IS_POSTGRES:
+    import psycopg2
+    import psycopg2.extras
+
+
+class _CursorWrapper:
+    """Makes a psycopg2 cursor look like a sqlite3 cursor to calling code:
+    accepts '?' placeholders and exposes .lastrowid after INSERT."""
+
+    def __init__(self, raw_cursor, is_postgres):
+        self._cur = raw_cursor
+        self.is_postgres = is_postgres
+        self._pg_lastrowid = None
+
+    def execute(self, query, params=()):
+        added_returning = False
+        if self.is_postgres:
+            query = query.replace('?', '%s')
+            stripped = query.strip().upper()
+            if stripped.startswith('INSERT') and 'RETURNING' not in stripped:
+                query = query.rstrip().rstrip(';') + ' RETURNING id'
+                added_returning = True
+        self._cur.execute(query, params)
+        if added_returning:
+            row = self._cur.fetchone()
+            self._pg_lastrowid = row['id'] if row else None
+        return self
+
+    def executescript(self, script):
+        # SQLite-only (multi-statement table-rebuild migrations). Never
+        # called on the Postgres path - fresh Postgres schemas are created
+        # with the final shape directly, so no migration is needed there.
+        if self.is_postgres:
+            raise NotImplementedError("executescript is SQLite-only")
+        self._cur.executescript(script)
+
+    def fetchone(self):
+        return self._cur.fetchone()
+
+    def fetchall(self):
+        return self._cur.fetchall()
+
+    @property
+    def lastrowid(self):
+        return self._pg_lastrowid if self.is_postgres else self._cur.lastrowid
+
+    @property
+    def rowcount(self):
+        return self._cur.rowcount
+
+
+class DBConnection:
+    """Wraps a raw sqlite3/psycopg2 connection with a single shared interface."""
+
+    def __init__(self, raw_conn, is_postgres):
+        self._conn = raw_conn
+        self.is_postgres = is_postgres
+
+    def cursor(self):
+        return _CursorWrapper(self._conn.cursor(), self.is_postgres)
+
+    def execute(self, query, params=()):
+        cur = self.cursor()
+        cur.execute(query, params)
+        return cur
+
+    def executescript(self, script):
+        cur = self.cursor()
+        cur.executescript(script)
+        self._conn.commit()
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
 
 def get_db():
-    """Get a database connection with row factory."""
-    db = sqlite3.connect(Config.DATABASE)
-    db.row_factory = sqlite3.Row
-    db.execute("PRAGMA foreign_keys = ON")
-    return db
+    """Get a database connection - PostgreSQL if DATABASE_URL is set, else local SQLite."""
+    if IS_POSTGRES:
+        conn = psycopg2.connect(Config.DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        return DBConnection(conn, is_postgres=True)
+    conn = sqlite3.connect(Config.DATABASE)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    return DBConnection(conn, is_postgres=False)
 
 
 def close_db(db):
@@ -28,6 +123,25 @@ def init_db():
     db = get_db()
     cursor = db.cursor()
 
+    if IS_POSTGRES:
+        _create_postgres_schema(cursor)
+    else:
+        _create_sqlite_schema(cursor)
+
+    db.commit()
+
+    if not IS_POSTGRES:
+        # Non-destructive migration for older local SQLite databases (adds
+        # polymorphic target columns to reports/messages, preserving all
+        # existing rows). Fresh Postgres databases already get the final
+        # schema directly from _create_postgres_schema, so this is skipped.
+        _migrate_polymorphic_targets(db)
+
+    close_db(db)
+    print(f"[DB] All tables initialized successfully. (engine: {'PostgreSQL' if IS_POSTGRES else 'SQLite'})")
+
+
+def _create_sqlite_schema(cursor):
     # — Sprint 1 Tables —
 
     cursor.execute('''
@@ -189,14 +303,146 @@ def init_db():
         )
     ''')
 
-    db.commit()
 
-    # Non-destructive migration for older databases (adds polymorphic target
-    # columns to reports/messages, preserving all existing rows).
-    _migrate_polymorphic_targets(db)
+def _create_postgres_schema(cursor):
+    """Same tables as SQLite, using PostgreSQL syntax. Created with the final
+    (post-migration) shape directly - target_type/target_id are present from
+    the start, so no separate migration step is needed for a fresh database."""
 
-    close_db(db)
-    print("[DB] All tables initialized successfully.")
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'user' CHECK(role IN ('user', 'admin')),
+            city TEXT DEFAULT '',
+            avatar TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS listings (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            category TEXT NOT NULL,
+            city TEXT NOT NULL,
+            location TEXT DEFAULT '',
+            condition TEXT DEFAULT 'Good',
+            contact_number TEXT DEFAULT '',
+            image_path TEXT DEFAULT '',
+            owner_id INTEGER NOT NULL REFERENCES users(id),
+            status TEXT DEFAULT 'active' CHECK(status IN ('active','soft_deleted','claimed')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS bookmarks (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            listing_id INTEGER NOT NULL REFERENCES listings(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, listing_id)
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS ratings (
+            id SERIAL PRIMARY KEY,
+            rater_id INTEGER NOT NULL REFERENCES users(id),
+            rated_user_id INTEGER NOT NULL REFERENCES users(id),
+            rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+            review TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(rater_id, rated_user_id)
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reports (
+            id SERIAL PRIMARY KEY,
+            reporter_id INTEGER NOT NULL REFERENCES users(id),
+            listing_id INTEGER REFERENCES listings(id),
+            target_type TEXT DEFAULT 'listing',
+            target_id INTEGER,
+            reason TEXT NOT NULL,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending','reviewed','dismissed')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS activity_logs (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            action TEXT NOT NULL,
+            details TEXT DEFAULT '',
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS donation_campaigns (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            category TEXT NOT NULL,
+            org_name TEXT DEFAULT '',
+            purpose TEXT NOT NULL,
+            target_amount REAL NOT NULL,
+            amount_raised REAL DEFAULT 0,
+            proof_path TEXT DEFAULT '',
+            contact TEXT NOT NULL,
+            city TEXT NOT NULL,
+            campaign_type TEXT DEFAULT 'personal' CHECK(campaign_type IN ('personal','trust','benevol')),
+            status TEXT DEFAULT 'active' CHECK(status IN ('active','funded','closed')),
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS wishes (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            category TEXT NOT NULL,
+            description TEXT NOT NULL,
+            city TEXT NOT NULL,
+            contact TEXT NOT NULL,
+            urgency TEXT DEFAULT 'Normal' CHECK(urgency IN ('Low','Normal','High','Urgent')),
+            status TEXT DEFAULT 'active' CHECK(status IN ('active','fulfilled','closed')),
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS page_views (
+            id SERIAL PRIMARY KEY,
+            path TEXT NOT NULL,
+            user_id INTEGER REFERENCES users(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at)')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            sender_id INTEGER NOT NULL REFERENCES users(id),
+            receiver_id INTEGER NOT NULL REFERENCES users(id),
+            listing_id INTEGER REFERENCES listings(id),
+            target_type TEXT DEFAULT 'listing',
+            target_id INTEGER,
+            message_text TEXT NOT NULL,
+            reply_text TEXT DEFAULT '',
+            is_read INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            replied_at TIMESTAMP
+        )
+    ''')
 
 
 def _has_column(cursor, table, column):
@@ -205,11 +451,8 @@ def _has_column(cursor, table, column):
 
 
 def _migrate_polymorphic_targets(db):
-    """Upgrade reports/messages to support listing/wish/campaign targets.
-
-    Runs once per table (guarded by presence of the target_type column). Uses
-    the standard SQLite table-rebuild pattern inside a transaction so existing
-    data is fully preserved and listing_id becomes nullable.
+    """SQLite-only. Upgrades older local databases created before reports/
+    messages supported wish/campaign targets, preserving all existing rows.
     """
     cursor = db.cursor()
 

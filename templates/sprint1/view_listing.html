@@ -93,7 +93,7 @@
                 <i class="bi bi-geo-alt-fill text-success"></i>{{ listing.city }}{% if listing.location %} · {{ listing.location }}{% endif %}
             </span>
             <span class="meta-chip">
-                <i class="bi bi-calendar3 text-muted"></i>{{ listing.created_at[:10] }}
+                <i class="bi bi-calendar3 text-muted"></i>{{ listing.created_at|shortdate }}
             </span>
         </div>
     </div>

@@ -70,7 +70,7 @@
                             {{ report.status|title }}
                         </span>
                     </td>
-                    <td><small class="text-muted">{{ report.created_at }}</small></td>
+                    <td><small class="text-muted">{{ report.created_at|shortdatetime }}</small></td>
                     <td>
                         {% if report.status == 'pending' %}
                         <form action="{{ url_for('sprint2_reports.review_report', report_id=report.id) }}" method="POST" class="d-inline">

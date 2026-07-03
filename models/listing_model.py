@@ -123,14 +123,14 @@ def get_listings(page=1, per_page=9, search='', category='', city='', sort='newe
 
 def get_categories():
     db = get_db()
-    rows = db.execute('SELECT DISTINCT category FROM listings WHERE status = "active" ORDER BY category').fetchall()
+    rows = db.execute("SELECT DISTINCT category FROM listings WHERE status = 'active' ORDER BY category").fetchall()
     close_db(db)
     return [r['category'] for r in rows]
 
 
 def get_cities():
     db = get_db()
-    rows = db.execute('SELECT DISTINCT city FROM listings WHERE status = "active" ORDER BY city').fetchall()
+    rows = db.execute("SELECT DISTINCT city FROM listings WHERE status = 'active' ORDER BY city").fetchall()
     close_db(db)
     return [r['city'] for r in rows]
 
@@ -145,7 +145,7 @@ def count_listings(status='active'):
 def get_listings_per_category():
     db = get_db()
     rows = db.execute(
-        'SELECT category, COUNT(*) as cnt FROM listings WHERE status = "active" GROUP BY category ORDER BY cnt DESC'
+        "SELECT category, COUNT(*) as cnt FROM listings WHERE status = 'active' GROUP BY category ORDER BY cnt DESC"
     ).fetchall()
     close_db(db)
     return rows
@@ -154,16 +154,21 @@ def get_listings_per_category():
 def get_listings_per_city():
     db = get_db()
     rows = db.execute(
-        'SELECT city, COUNT(*) as cnt FROM listings WHERE status = "active" GROUP BY city ORDER BY cnt DESC'
+        "SELECT city, COUNT(*) as cnt FROM listings WHERE status = 'active' GROUP BY city ORDER BY cnt DESC"
     ).fetchall()
     close_db(db)
     return rows
 
 
 def get_monthly_listings():
+    from database import IS_POSTGRES
     db = get_db()
-    rows = db.execute('''
-        SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as cnt
+    if IS_POSTGRES:
+        month_expr = "to_char(created_at, 'YYYY-MM')"
+    else:
+        month_expr = "strftime('%Y-%m', created_at)"
+    rows = db.execute(f'''
+        SELECT {month_expr} as month, COUNT(*) as cnt
         FROM listings WHERE status = 'active'
         GROUP BY month ORDER BY month DESC LIMIT 12
     ''').fetchall()

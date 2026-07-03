@@ -144,7 +144,7 @@
                         <div class="p-3 rounded-3" style="background:var(--surface-alt);">
                             <i class="bi bi-calendar text-warning fs-4 d-block mb-1"></i>
                             <div class="small text-muted">Started</div>
-                            <div class="fw-semibold small">{{ campaign['created_at'][:10] }}</div>
+                            <div class="fw-semibold small">{{ campaign['created_at']|shortdate }}</div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3 text-center">

@@ -31,7 +31,7 @@
                     <p class="mb-0 text-muted small">{{ log.details }}</p>
                     {% endif %}
                 </div>
-                <small class="text-muted">{{ log.timestamp }}</small>
+                <small class="text-muted">{{ log.timestamp|shortdatetime }}</small>
             </div>
         </div>
         {% endfor %}

@@ -9,6 +9,13 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'daanloop-secret-key-change-in-production')
     DATABASE = os.path.join(BASE_DIR, 'daanloop.db')
+
+    # If set, the app uses PostgreSQL instead of local SQLite (see database.py).
+    # e.g. postgresql://user:password@host:5432/dbname
+    # Supabase/Neon connection strings sometimes start with "postgres://" -
+    # normalize that to the "postgresql://" scheme psycopg2 expects.
+    _raw_db_url = os.environ.get('DATABASE_URL', '')
+    DATABASE_URL = _raw_db_url.replace('postgres://', 'postgresql://', 1) if _raw_db_url else ''
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max upload
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}

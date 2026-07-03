@@ -89,7 +89,7 @@
                         {% endif %}
                     </div>
                     <div class="col-md-2 text-end">
-                        <small class="text-muted d-block">{{ msg.created_at }}</small>
+                        <small class="text-muted d-block">{{ msg.created_at|shortdatetime }}</small>
                         <a href="{{ url_for('sprint3_messages.read_message', message_id=msg.id) }}" class="btn btn-sm btn-outline-primary mt-1">
                             <i class="bi bi-eye me-1"></i>View
                         </a>
@@ -153,7 +153,7 @@
                         {% endif %}
                     </div>
                     <div class="col-md-2 text-end">
-                        <small class="text-muted d-block">{{ msg.created_at }}</small>
+                        <small class="text-muted d-block">{{ msg.created_at|shortdatetime }}</small>
                         <a href="{{ url_for('sprint3_messages.read_message', message_id=msg.id) }}" class="btn btn-sm btn-outline-primary mt-1">
                             <i class="bi bi-eye me-1"></i>View
                         </a>

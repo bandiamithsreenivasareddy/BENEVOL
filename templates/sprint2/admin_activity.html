@@ -32,7 +32,7 @@
                     <span class="text-muted small ms-2">— {{ log.details }}</span>
                     {% endif %}
                 </div>
-                <small class="text-muted text-nowrap">{{ log.timestamp }}</small>
+                <small class="text-muted text-nowrap">{{ log.timestamp|shortdatetime }}</small>
             </div>
         </div>
         {% endfor %}
